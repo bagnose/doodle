@@ -24,7 +24,7 @@ Build instructions (approximately):
 3. Inside doodle repo, adjust "gtk" symlink to point to GtkD on your system
 
     cd ${HOME}/source/doodle
-    ln -sf ../GtkD gtk
+    ln -sf ../GtkD-2.0 gtk
 
 4. Configure doodle build directory:
 
@@ -38,3 +38,17 @@ Build instructions (approximately):
 6. Run doodle:
 
     ./run dist/bin/doodle
+
+
+
+
+Other info:
+
+    ctags with D support:
+
+    wget http://prdownloads.sourceforge.net/ctags/ctags-5.8.tar.gz
+    tar zxvf ctags-5.8.tar.gz
+    cd ctags-5.8
+    patch < ~/source/d/doodle.git/nobuild/ctags.patch
+    ./configure --prefix=${HOME}/local
+    make && make install
