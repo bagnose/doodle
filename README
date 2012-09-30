@@ -1,28 +1,40 @@
 Doodle - a simple diagramming tool
 
-Build instructions:
+Author: David Bryant, bagnose@gmail.com
 
-1. Build gtkd
+Build instructions (approximately):
 
-2. Configure build directory:
+1. Clone and build no-more-make: https://github.com/GrahamStJack/no-more-make
+   Put executables bob and bob-config somewhere in your path.
 
-  ./configure.sh --build=debug ${HOME}/builds/doodle/debug
+    cd ${HOME}/source/d
+    git clone https://github.com/GrahamStJack/no-more-make.git
+    cd no-more-make
+    ./build_with_dmd.sh
+    cp bob bob-config ${HOME}/local/bin
 
-3. Adjust Boboptions
+2. Download and build GtkD: https://github.com/gtkd-developers/GtkD/downloads
 
-  cd ${HOME}/builds/doodle/debug
-  vi Boboptions
+    cd ${HOME}/source/d
+    wget https://github.com/downloads/gtkd-developers/GtkD/GtkD-2.0.zip
+    mkdir GtkD-2.0 ; cd GtkD-2.0
+    unzip ../GtkD-2.0.zip
+    make
 
-  I change the following lines:
+3. Inside doodle repo, adjust "gtk" symlink to point to GtkD on your system
 
-    DEXTERNALS = std core glib gdk gtk gtkc cairo ;
-    DFLAGS = -w -wi -gc -I~/source/d/vcs/svn/gtkD-trunk/src ;
-    DLINKFLAGS = -L-L/home/daveb/source/d/vcs/svn/gtkD-trunk ;
+    cd ${HOME}/source/doodle
+    ln -sf ../GtkD gtk
 
-3. Build:
+4. Configure doodle build directory:
 
-  ./build
+    bob-config --mode=debug ${HOME}/builds/doodle/debug
 
-4. run
+5. Build doodle:
 
-  ./run doodle
+    cd ${HOME}/builds/doodle/debug
+    bob
+
+6. Run doodle:
+
+    ./run dist/bin/doodle
