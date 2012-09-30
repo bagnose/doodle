@@ -28,11 +28,11 @@ Build instructions (approximately):
 
 4. Configure doodle build directory:
 
-    bob-config --mode=debug ${HOME}/builds/doodle/debug
+    bob-config --mode=debug ${HOME}/build/doodle/debug
 
 5. Build doodle:
 
-    cd ${HOME}/builds/doodle/debug
+    cd ${HOME}/build/doodle/debug
     bob
 
 6. Run doodle:
@@ -46,9 +46,17 @@ Other info:
 
     ctags with D support:
 
-    wget http://prdownloads.sourceforge.net/ctags/ctags-5.8.tar.gz
-    tar zxvf ctags-5.8.tar.gz
-    cd ctags-5.8
-    patch < ~/source/d/doodle.git/nobuild/ctags.patch
-    ./configure --prefix=${HOME}/local
-    make && make install
+        wget http://prdownloads.sourceforge.net/ctags/ctags-5.8.tar.gz
+        tar zxvf ctags-5.8.tar.gz
+        cd ctags-5.8
+        patch < ~/source/d/doodle.git/nobuild/ctags.patch
+        ./configure --prefix=${HOME}/local
+        make && make install
+
+        cd ${HOME}/build/doodle/debug
+        find -L src -name \*.d | ctags -L- --extra=+f -f TAGS ;
+
+    Building within vim:
+
+        set makeprg=bob
+        :make
