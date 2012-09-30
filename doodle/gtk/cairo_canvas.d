@@ -169,11 +169,11 @@ final class CairoCanvas : Table, IViewport {
         }
 
         void damageModel(in Rectangle area) {
-            _tmpDamageScreen = _tmpDamageScreen | _screenModel.modelToScreen(area);
+            _damageScreen = _damageScreen | _screenModel.modelToScreen(area);
         }
 
         void damageScreen(in Rectangle area) {
-            _tmpDamageScreen = _tmpDamageScreen | area;
+            _damageScreen = _damageScreen | area;
         }
     }
 
@@ -223,9 +223,7 @@ final class CairoCanvas : Table, IViewport {
                           Vector(x1 - x0, y1 - y0));
             assert(screenDamage.valid);
 
-            writefln("External screen damage: %s", screenDamage);
-            writefln("Internal screen damage: %s", _internalDamageScreen);
-            assert(screenDamage.contains(_internalDamageScreen));
+            //writefln("External screen damage: %s", screenDamage);
 
             Rectangle modelDamage = _screenModel.screenToModel(screenDamage);
 
@@ -265,8 +263,6 @@ final class CairoCanvas : Table, IViewport {
                                  modelDamage,  new CairoRenderer(modelCr),
                                  _screenModel);
             } screenCr.restore(); screenCr.restore();
-
-            _internalDamageScreen = Rectangle();
 
             return true;
         }
@@ -318,10 +314,12 @@ final class CairoCanvas : Table, IViewport {
             _hRuler.event(event);
             _vRuler.event(event);
 
+            /+
             // Simulate delay in case we were slow to handle the event.
             // This is really only relevant if we were to do the drawing from inside
             // the handler. ???
-            Thread.sleep(dur!("msecs")(50));
+            Thread.sleep(dur!("msecs")(250));
+            +/
 
             return true;
         }
@@ -436,14 +434,18 @@ final class CairoCanvas : Table, IViewport {
         }
 
         void reportDamage() {
-            if (_tmpDamageScreen.valid) {
+            if (_damageScreen.valid) {
                 int x, y, w, h;
-                _tmpDamageScreen.getQuantised(x, y, w, h);
+                _damageScreen.getQuantised(x, y, w, h);
                 _drawingArea.queueDrawArea(x, cast(int)_screenModel.viewBoundsScreen.h - (y + h), w, h);
-                _internalDamageScreen = _internalDamageScreen | _tmpDamageScreen;
-                _tmpDamageScreen = Rectangle();
+                _damageScreen = Rectangle();
+
+                // Force the damage to be fixed now.
+                // If we don't do this then additional input events
+                // can keep piling up.
+                _drawingArea.getWindow().processAllUpdates();
             }
-            assert(!_tmpDamageScreen.valid);
+            assert(!_damageScreen.valid);
         }
 
         void onRealize(Widget widget) {
@@ -465,8 +467,7 @@ final class CairoCanvas : Table, IViewport {
         Adjustment    _vAdjustment;
         VScrollbar    _vScrollbar;
 
-        Rectangle     _tmpDamageScreen;             // accumulated from damageModel and damageScreen calls
-        Rectangle     _internalDamageScreen;        // aggregated from _tmpDamageScreen in reportDamage calls
+        Rectangle     _damageScreen;        // accumulated from damageModel and damageScreen calls
         ScreenModel   _screenModel;
 
         static immutable CursorType[Cursor] _cursors;
