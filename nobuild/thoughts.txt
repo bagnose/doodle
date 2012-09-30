@@ -1,0 +1,12 @@
+
+Maybe make each layer handle events, otherwise, how will the selection layer
+clear the selection if you click outside of it, for example?
+
+The current scheme of continuing to send events to a tool/handler when it
+accepts the button press is inadequate. The tool/handler needs to be able
+to make explicit grabs independent of button state.
+
+Selection manager needs to find out about diagram-elements being removed
+
+How about pressing the delete key when item(s) are selected? This needs
+to be handled by the something that understands the selection...

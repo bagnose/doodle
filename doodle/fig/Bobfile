@@ -1,0 +1,3 @@
+refer doodle/core doodle/tk doodle/dia ;
+
+static-lib fig : diagram_elements.d diagram_layer.d network.d selection_layer.d select_tool.d tools.d ;

@@ -1,0 +1,12 @@
+DEXTERNALS = std core glib gdk gtk gtkc cairo ;
+C++FLAGS = -fPIC -pedantic -Werror -Wall -Wno-long-long -Wundef -Wredundant-decls -O1 -DACRES_DEBUG=1 -DACRES_INTEGRATE=1 -fno-omit-frame-pointer -ggdb3 -Woverloaded-virtual -Wsign-promo -Wctor-dtor-privacy -Wnon-virtual-dtor ;
+ARCHITECTURES = ;
+LINKFLAGS = -lstdc++ -rdynamic ;
+VALID_ARCHITECTURES = CentOS-4 Ubuntu CentOS-5 ;
+PROJECT-PACKAGE = doodle ;
+CCFLAGS = -fPIC -pedantic -Werror -Wall -Wno-long-long -Wundef -Wredundant-decls -O1 -DACRES_DEBUG=1 -DACRES_INTEGRATE=1 -fno-omit-frame-pointer -ggdb3 ;
+#DFLAGS = -w -wi -gc -I~/source/d/gtkD-trunk/src ;
+#DFLAGS = -w -wi -gc -I~/source/d/GtkD/src ;
+DFLAGS = -w -wi -gc -Isrc/gtk ;
+
+DLINKFLAGS = -L-L/home/dbryant/source/d/GtkD ;

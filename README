@@ -1,0 +1,28 @@
+Doodle - a simple diagramming tool
+
+Build instructions:
+
+1. Build gtkd
+
+2. Configure build directory:
+
+  ./configure.sh --build=debug ${HOME}/builds/doodle/debug
+
+3. Adjust Boboptions
+
+  cd ${HOME}/builds/doodle/debug
+  vi Boboptions
+
+  I change the following lines:
+
+    DEXTERNALS = std core glib gdk gtk gtkc cairo ;
+    DFLAGS = -w -wi -gc -I~/source/d/vcs/svn/gtkD-trunk/src ;
+    DLINKFLAGS = -L-L/home/daveb/source/d/vcs/svn/gtkD-trunk ;
+
+3. Build:
+
+  ./build
+
+4. run
+
+  ./run doodle

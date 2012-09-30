@@ -1,0 +1,1 @@
+static-lib core : backtrace.d logging.d misc.d undo.d ;

@@ -1,0 +1,98 @@
+# --- Sample .hgrc file. Customize and drop as ~/.hgrc --- #
+
+# --- Mercurial's internal format --- #
+[revlog]
+# format = 0 for revlog; format = 1 for revlogng
+format = 1
+# format flags
+# inline is the only valid flag right now.
+# revlogng needs flags = inline
+flags = inline
+
+[diff]
+ignorews = True
+
+# --- User interface --- #
+[ui]
+# show changed files and be a bit more verbose if True
+verbose = True
+# username data to appear in comits
+# it usually takes the form: "Joe User <joe.user at host.com>"
+username = David Bryant <bagnose@gmail.com>
+
+# --- Active Extensions --- #
+# each extension has its own 'extension_name = path' line
+# the default python library path is used when path is left blank
+# the hgext dir is used when 'hgext.extension_name = ' is written
+[extensions]
+hgk =
+# acl - Access control lists
+# hg help acl
+# hgext.acl =
+# ---
+# bisect - binary search changesets to detect (mis)features
+# hg help bisect
+# hgext.hbisect =
+# ---
+# bugzilla - update bugzilla bugs when changesets mention them
+# hg help bugzilla
+# hgext.bugzilla =
+# ---
+# extdiff - Use external diff application instead of builtin one
+# hgext.extdiff =
+# ---
+# gpg - GPG checks and signing
+# hg help gpg
+# hgext.gpg =
+# ---
+# hgk - GUI repository browser
+# hg help view
+# hgk = /home/pachi/program/hg/hg/contrib/hgk.py
+# ---
+# mq - Mercurial patch queues
+# hg help mq
+# hgext.mq =
+# ---
+# notify - Template driven e-mail notifications
+# hg help notify
+# hgext.notify =
+# ---
+# patchbomb - send changesets as a series of patch emails
+# hg help email
+# hgext.patchbomb =
+# ---
+# win32text - line ending conversion filters for the Windows platform
+# hgext.win32text =
+
+# --- hgk additional configuration --- #
+# set executable path
+#[hgk]
+#path = /home/pachi/program/hg/hg/contrib/hgk
+
+# Hook to Mercurial actions - See hgrc man page for avaliable hooks
+[hooks]
+#Example notify hooks
+#incoming.notify = python:hgext.notify.hook
+#changegroup.notify = python:hgext.notify.hook
+
+# --- notify extension configuration --- #
+# Email information for the notify extension
+[email]
+#from = your at email.address
+
+# smtp sever to send notifications to
+[smtp]
+#host = localhost
+
+# base url, or dummy value if repo isn't available via http
+[web]
+#baseurl = http://hgserver/...
+
+[notify]
+# multiple sources can be specified as a whitespace separated list
+#sources = serve push pull bundle
+# set this to False when you're ready for mail to start sending
+#test = True
+#config = /path/to/subscription/file
+
+# --- end of file --- #

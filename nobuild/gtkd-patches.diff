@@ -1,0 +1,4074 @@
+Index: GNUmakefile
+===================================================================
+--- GNUmakefile	(revision 844)
++++ GNUmakefile	(working copy)
+@@ -1,6 +1,8 @@
+ #makeAll.sh
+ SHELL=/bin/sh
+-prefix=/usr/local
++#prefix=/usr/local
++prefix=/home/daveb/source/d/dmd
++LIBDIR=lib64
+ 
+ OS=$(shell uname || uname -s)
+ ARCH=$(shell arch || uname -m)
+@@ -19,7 +21,8 @@
+ endif
+ 
+ ifeq ("$(DC)","dmd")
+-    DCFLAGS=-O
++#DCFLAGS=-O
++    DCFLAGS=-O -w -wi -m64
+     LINKERFLAG=-L
+     output=-of$@
+ else ifeq ("$(DC)","ldc")
+@@ -169,34 +172,34 @@
+ 	(cd src;   echo $(SOURCES_GTKD)   | sed -e s,src/,,g   | xargs tar c) | (cd $(DESTDIR)$(prefix)/include/d; tar xv)
+ 	(cd srcgl; echo $(SOURCES_GTKDGL) | sed -e s,srcgl/,,g | xargs tar c) | (cd $(DESTDIR)$(prefix)/include/d; tar xv)
+ 	(cd srcsv; echo $(SOURCES_GTKDSV) | sed -e s,srcsv/,,g | xargs tar c) | (cd $(DESTDIR)$(prefix)/include/d; tar xv)
+-	install -d $(DESTDIR)$(prefix)/lib
+-	install -m 644 $(LIBNAME_GTKD)   $(DESTDIR)$(prefix)/lib
+-	install -m 644 $(LIBNAME_GTKDGL) $(DESTDIR)$(prefix)/lib
+-	install -m 644 $(LIBNAME_GTKDSV) $(DESTDIR)$(prefix)/lib
++	install -d $(DESTDIR)$(prefix)/$(LIBDIR)
++	install -m 644 $(LIBNAME_GTKD)   $(DESTDIR)$(prefix)/$(LIBDIR)
++	install -m 644 $(LIBNAME_GTKDGL) $(DESTDIR)$(prefix)/$(LIBDIR)
++	install -m 644 $(LIBNAME_GTKDSV) $(DESTDIR)$(prefix)/$(LIBDIR)
+ 
+ install-gda: install
+ 	(cd srcgda; echo $(SOURCES_GTKDGDA) | sed -e s,srcgda/,,g | xargs tar c) | (cd $(DESTDIR)$(prefix)/include/d; tar xv)
+-	install -m 644 $(LIBNAME_GTKDGDA) $(DESTDIR)$(prefix)/lib
++	install -m 644 $(LIBNAME_GTKDGDA) $(DESTDIR)$(prefix)/$(LIBDIR)
+ 
+ install-gstreamer: install
+ 	(cd srcgstreamer; echo $(SOURCES_GSTREAMERD) | sed -e s,srcgstreamer/,,g | xargs tar c) | (cd $(DESTDIR)$(prefix)/include/d; tar xv)
+-	install -m 644 $(LIBNAME_GSTREAMERD) $(DESTDIR)$(prefix)/lib
++	install -m 644 $(LIBNAME_GSTREAMERD) $(DESTDIR)$(prefix)/$(LIBDIR)
+ 
+ uninstall:
+ 	$(foreach dir,$(shell ls src)  , rm -rf $(DESTDIR)$(prefix)/include/d/$(dir))
+ 	$(foreach dir,$(shell ls srcgl), rm -rf $(DESTDIR)$(prefix)/include/d/$(dir))
+ 	$(foreach dir,$(shell ls srcsv), rm -rf $(DESTDIR)$(prefix)/include/d/$(dir))
+-	rm -f $(DESTDIR)$(prefix)/lib/$(LIBNAME_GTKD)
+-	rm -f $(DESTDIR)$(prefix)/lib/$(LIBNAME_GTKDGL)
+-	rm -f $(DESTDIR)$(prefix)/lib/$(LIBNAME_GTKDSV)
++	rm -f $(DESTDIR)$(prefix)/$(LIBDIR)/$(LIBNAME_GTKD)
++	rm -f $(DESTDIR)$(prefix)/$(LIBDIR)/$(LIBNAME_GTKDGL)
++	rm -f $(DESTDIR)$(prefix)/$(LIBDIR)/$(LIBNAME_GTKDSV)
+ 
+ uninstall-gda:
+ 	$(foreach dir,$(shell ls srcgda), rm -rf $(DESTDIR)$(prefix)/include/d/$(dir))
+-	rm -f $(DESTDIR)$(prefix)/lib/$(LIBNAME_GTKDGDA)
++	rm -f $(DESTDIR)$(prefix)/$(LIBDIR)/$(LIBNAME_GTKDGDA)
+ 
+ uninstall-gstreamer:
+ 	$(foreach dir,$(shell ls srcgstreamer), rm -rf $(DESTDIR)$(prefix)/include/d/$(dir))
+-	rm -f $(DESTDIR)$(prefix)/lib/$(LIBNAME_GSTREAMERD)
++	rm -f $(DESTDIR)$(prefix)/$(LIBDIR)/$(LIBNAME_GSTREAMERD)
+ 
+ clean:
+ 	-rm -f $(LIBNAME_GTKD)       $(OBJECTS_GTKD) 
+Index: src/atk/ObjectFactory.d
+===================================================================
+--- src/atk/ObjectFactory.d	(revision 844)
++++ src/atk/ObjectFactory.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.atkObjectFactory = atkObjectFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkObjectFactory = cast(AtkObjectFactory*)obj;
+Index: src/atk/NoOpObject.d
+===================================================================
+--- src/atk/NoOpObject.d	(revision 844)
++++ src/atk/NoOpObject.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.atkNoOpObject = atkNoOpObject;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkNoOpObject = cast(AtkNoOpObject*)obj;
+Index: src/atk/Hyperlink.d
+===================================================================
+--- src/atk/Hyperlink.d	(revision 844)
++++ src/atk/Hyperlink.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.atkHyperlink = atkHyperlink;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkHyperlink = cast(AtkHyperlink*)obj;
+Index: src/atk/ObjectAtk.d
+===================================================================
+--- src/atk/ObjectAtk.d	(revision 844)
++++ src/atk/ObjectAtk.d	(working copy)
+@@ -133,7 +133,7 @@
+ 		this.atkObject = atkObject;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkObject = cast(AtkObject*)obj;
+Index: src/atk/Registry.d
+===================================================================
+--- src/atk/Registry.d	(revision 844)
++++ src/atk/Registry.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.atkRegistry = atkRegistry;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkRegistry = cast(AtkRegistry*)obj;
+Index: src/atk/Relation.d
+===================================================================
+--- src/atk/Relation.d	(revision 844)
++++ src/atk/Relation.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.atkRelation = atkRelation;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkRelation = cast(AtkRelation*)obj;
+Index: src/atk/RelationSet.d
+===================================================================
+--- src/atk/RelationSet.d	(revision 844)
++++ src/atk/RelationSet.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.atkRelationSet = atkRelationSet;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkRelationSet = cast(AtkRelationSet*)obj;
+Index: src/atk/NoOpObjectFactory.d
+===================================================================
+--- src/atk/NoOpObjectFactory.d	(revision 844)
++++ src/atk/NoOpObjectFactory.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.atkNoOpObjectFactory = atkNoOpObjectFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkNoOpObjectFactory = cast(AtkNoOpObjectFactory*)obj;
+Index: src/atk/GObjectAccessible.d
+===================================================================
+--- src/atk/GObjectAccessible.d	(revision 844)
++++ src/atk/GObjectAccessible.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.atkGObjectAccessible = atkGObjectAccessible;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkGObjectAccessible = cast(AtkGObjectAccessible*)obj;
+Index: src/atk/StateSet.d
+===================================================================
+--- src/atk/StateSet.d	(revision 844)
++++ src/atk/StateSet.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.atkStateSet = atkStateSet;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		atkStateSet = cast(AtkStateSet*)obj;
+Index: src/gdkpixbuf/PixbufAnimation.d
+===================================================================
+--- src/gdkpixbuf/PixbufAnimation.d	(revision 844)
++++ src/gdkpixbuf/PixbufAnimation.d	(working copy)
+@@ -131,7 +131,7 @@
+ 		this.gdkPixbufAnimation = gdkPixbufAnimation;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixbufAnimation = cast(GdkPixbufAnimation*)obj;
+Index: src/gdkpixbuf/PixbufAnimationIter.d
+===================================================================
+--- src/gdkpixbuf/PixbufAnimationIter.d	(revision 844)
++++ src/gdkpixbuf/PixbufAnimationIter.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gdkPixbufAnimationIter = gdkPixbufAnimationIter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixbufAnimationIter = cast(GdkPixbufAnimationIter*)obj;
+Index: src/gdkpixbuf/PixbufLoader.d
+===================================================================
+--- src/gdkpixbuf/PixbufLoader.d	(revision 844)
++++ src/gdkpixbuf/PixbufLoader.d	(working copy)
+@@ -161,7 +161,7 @@
+ 		this.gdkPixbufLoader = gdkPixbufLoader;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixbufLoader = cast(GdkPixbufLoader*)obj;
+Index: src/gdkpixbuf/PixbufSimpleAnimation.d
+===================================================================
+--- src/gdkpixbuf/PixbufSimpleAnimation.d	(revision 844)
++++ src/gdkpixbuf/PixbufSimpleAnimation.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gdkPixbufSimpleAnim = gdkPixbufSimpleAnim;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixbufSimpleAnim = cast(GdkPixbufSimpleAnim*)obj;
+Index: src/pango/PgRenderer.d
+===================================================================
+--- src/pango/PgRenderer.d	(revision 844)
++++ src/pango/PgRenderer.d	(working copy)
+@@ -132,7 +132,7 @@
+ 		this.pangoRenderer = pangoRenderer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoRenderer = cast(PangoRenderer*)obj;
+Index: src/pango/PgLayout.d
+===================================================================
+--- src/pango/PgLayout.d	(revision 844)
++++ src/pango/PgLayout.d	(working copy)
+@@ -137,7 +137,7 @@
+ 		this.pangoLayout = pangoLayout;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoLayout = cast(PangoLayout*)obj;
+Index: src/pango/PgFontset.d
+===================================================================
+--- src/pango/PgFontset.d	(revision 844)
++++ src/pango/PgFontset.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.pangoFontset = pangoFontset;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFontset = cast(PangoFontset*)obj;
+Index: src/pango/PgCairoFontMap.d
+===================================================================
+--- src/pango/PgCairoFontMap.d	(revision 844)
++++ src/pango/PgCairoFontMap.d	(working copy)
+@@ -209,7 +209,7 @@
+ 		this.pangoCairoFontMap = pangoCairoFontMap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoCairoFontMap = cast(PangoCairoFontMap*)obj;
+Index: src/pango/PgFontMap.d
+===================================================================
+--- src/pango/PgFontMap.d	(revision 844)
++++ src/pango/PgFontMap.d	(working copy)
+@@ -130,7 +130,7 @@
+ 		this.pangoFontMap = pangoFontMap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFontMap = cast(PangoFontMap*)obj;
+Index: src/pango/PgEngine.d
+===================================================================
+--- src/pango/PgEngine.d	(revision 844)
++++ src/pango/PgEngine.d	(working copy)
+@@ -125,7 +125,7 @@
+ 		this.pangoEngine = pangoEngine;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoEngine = cast(PangoEngine*)obj;
+Index: src/pango/PgFont.d
+===================================================================
+--- src/pango/PgFont.d	(revision 844)
++++ src/pango/PgFont.d	(working copy)
+@@ -136,7 +136,7 @@
+ 		this.pangoFont = pangoFont;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFont = cast(PangoFont*)obj;
+Index: src/pango/PgEngineLang.d
+===================================================================
+--- src/pango/PgEngineLang.d	(revision 844)
++++ src/pango/PgEngineLang.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.pangoEngineLang = pangoEngineLang;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoEngineLang = cast(PangoEngineLang*)obj;
+Index: src/pango/PgFontFamily.d
+===================================================================
+--- src/pango/PgFontFamily.d	(revision 844)
++++ src/pango/PgFontFamily.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.pangoFontFamily = pangoFontFamily;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFontFamily = cast(PangoFontFamily*)obj;
+Index: src/pango/PgContext.d
+===================================================================
+--- src/pango/PgContext.d	(revision 844)
++++ src/pango/PgContext.d	(working copy)
+@@ -150,7 +150,7 @@
+ 		this.pangoContext = pangoContext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoContext = cast(PangoContext*)obj;
+Index: src/pango/PgFontFace.d
+===================================================================
+--- src/pango/PgFontFace.d	(revision 844)
++++ src/pango/PgFontFace.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.pangoFontFace = pangoFontFace;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFontFace = cast(PangoFontFace*)obj;
+Index: src/pango/PgEngineShape.d
+===================================================================
+--- src/pango/PgEngineShape.d	(revision 844)
++++ src/pango/PgEngineShape.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.pangoEngineShape = pangoEngineShape;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoEngineShape = cast(PangoEngineShape*)obj;
+Index: src/pango/PgFontsetSimple.d
+===================================================================
+--- src/pango/PgFontsetSimple.d	(revision 844)
++++ src/pango/PgFontsetSimple.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.pangoFontsetSimple = pangoFontsetSimple;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		pangoFontsetSimple = cast(PangoFontsetSimple*)obj;
+Index: src/gdk/DisplayManager.d
+===================================================================
+--- src/gdk/DisplayManager.d	(revision 844)
++++ src/gdk/DisplayManager.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gdkDisplayManager = gdkDisplayManager;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkDisplayManager = cast(GdkDisplayManager*)obj;
+Index: src/gdk/Window.d
+===================================================================
+--- src/gdk/Window.d	(revision 844)
++++ src/gdk/Window.d	(working copy)
+@@ -400,7 +400,7 @@
+ 		this.gdkWindow = gdkWindow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkWindow = cast(GdkWindow*)obj;
+Index: src/gdk/Keymap.d
+===================================================================
+--- src/gdk/Keymap.d	(revision 844)
++++ src/gdk/Keymap.d	(working copy)
+@@ -166,7 +166,7 @@
+ 		this.gdkKeymap = gdkKeymap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkKeymap = cast(GdkKeymap*)obj;
+Index: src/gdk/Pixbuf.d
+===================================================================
+--- src/gdk/Pixbuf.d	(revision 844)
++++ src/gdk/Pixbuf.d	(working copy)
+@@ -141,7 +141,7 @@
+ 		this.gdkPixbuf = gdkPixbuf;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixbuf = cast(GdkPixbuf*)obj;
+Index: src/gdk/Pixmap.d
+===================================================================
+--- src/gdk/Pixmap.d	(revision 844)
++++ src/gdk/Pixmap.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gdkPixmap = gdkPixmap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkPixmap = cast(GdkPixmap*)obj;
+Index: src/gdk/Display.d
+===================================================================
+--- src/gdk/Display.d	(revision 844)
++++ src/gdk/Display.d	(working copy)
+@@ -131,7 +131,7 @@
+ 		this.gdkDisplay = gdkDisplay;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkDisplay = cast(GdkDisplay*)obj;
+Index: src/gdk/Screen.d
+===================================================================
+--- src/gdk/Screen.d	(revision 844)
++++ src/gdk/Screen.d	(working copy)
+@@ -150,7 +150,7 @@
+ 		this.gdkScreen = gdkScreen;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkScreen = cast(GdkScreen*)obj;
+Index: src/gdk/Drawable.d
+===================================================================
+--- src/gdk/Drawable.d	(revision 844)
++++ src/gdk/Drawable.d	(working copy)
+@@ -170,7 +170,7 @@
+ 		this.gdkDrawable = gdkDrawable;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkDrawable = cast(GdkDrawable*)obj;
+Index: src/gdk/GC.d
+===================================================================
+--- src/gdk/GC.d	(revision 844)
++++ src/gdk/GC.d	(working copy)
+@@ -149,7 +149,7 @@
+ 		this.gdkGC = gdkGC;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkGC = cast(GdkGC*)obj;
+Index: src/gtk/Accessible.d
+===================================================================
+--- src/gtk/Accessible.d	(revision 844)
++++ src/gtk/Accessible.d	(working copy)
+@@ -105,7 +105,7 @@
+ 		this.gtkAccessible = gtkAccessible;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAccessible = cast(GtkAccessible*)obj;
+Index: src/gtk/FileChooserButton.d
+===================================================================
+--- src/gtk/FileChooserButton.d	(revision 844)
++++ src/gtk/FileChooserButton.d	(working copy)
+@@ -145,7 +145,7 @@
+ 		this.gtkFileChooserButton = gtkFileChooserButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFileChooserButton = cast(GtkFileChooserButton*)obj;
+Index: src/gtk/HPaned.d
+===================================================================
+--- src/gtk/HPaned.d	(revision 844)
++++ src/gtk/HPaned.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gtkHPaned = gtkHPaned;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHPaned = cast(GtkHPaned*)obj;
+Index: src/gtk/RadioMenuItem.d
+===================================================================
+--- src/gtk/RadioMenuItem.d	(revision 844)
++++ src/gtk/RadioMenuItem.d	(working copy)
+@@ -144,7 +144,7 @@
+ 		this.gtkRadioMenuItem = gtkRadioMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRadioMenuItem = cast(GtkRadioMenuItem*)obj;
+Index: src/gtk/VolumeButton.d
+===================================================================
+--- src/gtk/VolumeButton.d	(revision 844)
++++ src/gtk/VolumeButton.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkVolumeButton = gtkVolumeButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVolumeButton = cast(GtkVolumeButton*)obj;
+Index: src/gtk/Menu.d
+===================================================================
+--- src/gtk/Menu.d	(revision 844)
++++ src/gtk/Menu.d	(working copy)
+@@ -190,7 +190,7 @@
+ 		this.gtkMenu = gtkMenu;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMenu = cast(GtkMenu*)obj;
+Index: src/gtk/ColorSelectionDialog.d
+===================================================================
+--- src/gtk/ColorSelectionDialog.d	(revision 844)
++++ src/gtk/ColorSelectionDialog.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gtkColorSelectionDialog = gtkColorSelectionDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkColorSelectionDialog = cast(GtkColorSelectionDialog*)obj;
+Index: src/gtk/SeparatorMenuItem.d
+===================================================================
+--- src/gtk/SeparatorMenuItem.d	(revision 844)
++++ src/gtk/SeparatorMenuItem.d	(working copy)
+@@ -108,7 +108,7 @@
+ 		this.gtkSeparatorMenuItem = gtkSeparatorMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSeparatorMenuItem = cast(GtkSeparatorMenuItem*)obj;
+Index: src/gtk/Expander.d
+===================================================================
+--- src/gtk/Expander.d	(revision 844)
++++ src/gtk/Expander.d	(working copy)
+@@ -171,7 +171,7 @@
+ 		this.gtkExpander = gtkExpander;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkExpander = cast(GtkExpander*)obj;
+Index: src/gtk/Assistant.d
+===================================================================
+--- src/gtk/Assistant.d	(revision 844)
++++ src/gtk/Assistant.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gtkAssistant = gtkAssistant;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAssistant = cast(GtkAssistant*)obj;
+Index: src/gtk/CellRendererText.d
+===================================================================
+--- src/gtk/CellRendererText.d	(revision 844)
++++ src/gtk/CellRendererText.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gtkCellRendererText = gtkCellRendererText;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererText = cast(GtkCellRendererText*)obj;
+Index: src/gtk/FontSelection.d
+===================================================================
+--- src/gtk/FontSelection.d	(revision 844)
++++ src/gtk/FontSelection.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkFontSelection = gtkFontSelection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFontSelection = cast(GtkFontSelection*)obj;
+Index: src/gtk/Tooltips.d
+===================================================================
+--- src/gtk/Tooltips.d	(revision 844)
++++ src/gtk/Tooltips.d	(working copy)
+@@ -178,7 +178,7 @@
+ 		this.gtkTooltips = gtkTooltips;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTooltips = cast(GtkTooltips*)obj;
+Index: src/gtk/SeparatorToolItem.d
+===================================================================
+--- src/gtk/SeparatorToolItem.d	(revision 844)
++++ src/gtk/SeparatorToolItem.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkSeparatorToolItem = gtkSeparatorToolItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSeparatorToolItem = cast(GtkSeparatorToolItem*)obj;
+Index: src/gtk/Layout.d
+===================================================================
+--- src/gtk/Layout.d	(revision 844)
++++ src/gtk/Layout.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gtkLayout = gtkLayout;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkLayout = cast(GtkLayout*)obj;
+Index: src/gtk/PrintOperation.d
+===================================================================
+--- src/gtk/PrintOperation.d	(revision 844)
++++ src/gtk/PrintOperation.d	(working copy)
+@@ -202,7 +202,7 @@
+ 		this.gtkPrintOperation = gtkPrintOperation;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrintOperation = cast(GtkPrintOperation*)obj;
+Index: src/gtk/Spinner.d
+===================================================================
+--- src/gtk/Spinner.d	(revision 844)
++++ src/gtk/Spinner.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gtkSpinner = gtkSpinner;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSpinner = cast(GtkSpinner*)obj;
+Index: src/gtk/TextTag.d
+===================================================================
+--- src/gtk/TextTag.d	(revision 844)
++++ src/gtk/TextTag.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkTextTag = gtkTextTag;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTextTag = cast(GtkTextTag*)obj;
+Index: src/gtk/IconView.d
+===================================================================
+--- src/gtk/IconView.d	(revision 844)
++++ src/gtk/IconView.d	(working copy)
+@@ -141,7 +141,7 @@
+ 		this.gtkIconView = gtkIconView;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIconView = cast(GtkIconView*)obj;
+Index: src/gtk/AccelGroup.d
+===================================================================
+--- src/gtk/AccelGroup.d	(revision 844)
++++ src/gtk/AccelGroup.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gtkAccelGroup = gtkAccelGroup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAccelGroup = cast(GtkAccelGroup*)obj;
+Index: src/gtk/FileFilter.d
+===================================================================
+--- src/gtk/FileFilter.d	(revision 844)
++++ src/gtk/FileFilter.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gtkFileFilter = gtkFileFilter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFileFilter = cast(GtkFileFilter*)obj;
+Index: src/gtk/Builder.d
+===================================================================
+--- src/gtk/Builder.d	(revision 844)
++++ src/gtk/Builder.d	(working copy)
+@@ -358,7 +358,7 @@
+ 		this.gtkBuilder = gtkBuilder;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkBuilder = cast(GtkBuilder*)obj;
+Index: src/gtk/VSeparator.d
+===================================================================
+--- src/gtk/VSeparator.d	(revision 844)
++++ src/gtk/VSeparator.d	(working copy)
+@@ -108,7 +108,7 @@
+ 		this.gtkVSeparator = gtkVSeparator;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVSeparator = cast(GtkVSeparator*)obj;
+Index: src/gtk/SizeGroup.d
+===================================================================
+--- src/gtk/SizeGroup.d	(revision 844)
++++ src/gtk/SizeGroup.d	(working copy)
+@@ -167,7 +167,7 @@
+ 		this.gtkSizeGroup = gtkSizeGroup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSizeGroup = cast(GtkSizeGroup*)obj;
+Index: src/gtk/Box.d
+===================================================================
+--- src/gtk/Box.d	(revision 844)
++++ src/gtk/Box.d	(working copy)
+@@ -150,7 +150,7 @@
+ 		this.gtkBox = gtkBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkBox = cast(GtkBox*)obj;
+Index: src/gtk/EventBox.d
+===================================================================
+--- src/gtk/EventBox.d	(revision 844)
++++ src/gtk/EventBox.d	(working copy)
+@@ -108,7 +108,7 @@
+ 		this.gtkEventBox = gtkEventBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkEventBox = cast(GtkEventBox*)obj;
+Index: src/gtk/CellRendererAccel.d
+===================================================================
+--- src/gtk/CellRendererAccel.d	(revision 844)
++++ src/gtk/CellRendererAccel.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkCellRendererAccel = gtkCellRendererAccel;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererAccel = cast(GtkCellRendererAccel*)obj;
+Index: src/gtk/TextMark.d
+===================================================================
+--- src/gtk/TextMark.d	(revision 844)
++++ src/gtk/TextMark.d	(working copy)
+@@ -130,7 +130,7 @@
+ 		this.gtkTextMark = gtkTextMark;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTextMark = cast(GtkTextMark*)obj;
+Index: src/gtk/OffscreenWindow.d
+===================================================================
+--- src/gtk/OffscreenWindow.d	(revision 844)
++++ src/gtk/OffscreenWindow.d	(working copy)
+@@ -129,7 +129,7 @@
+ 		this.gtkOffscreenWindow = gtkOffscreenWindow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkOffscreenWindow = cast(GtkOffscreenWindow*)obj;
+Index: src/gtk/HandleBox.d
+===================================================================
+--- src/gtk/HandleBox.d	(revision 844)
++++ src/gtk/HandleBox.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gtkHandleBox = gtkHandleBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHandleBox = cast(GtkHandleBox*)obj;
+Index: src/gtk/AccelMap.d
+===================================================================
+--- src/gtk/AccelMap.d	(revision 844)
++++ src/gtk/AccelMap.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkAccelMap = gtkAccelMap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAccelMap = cast(GtkAccelMap*)obj;
+Index: src/gtk/RecentChooserWidget.d
+===================================================================
+--- src/gtk/RecentChooserWidget.d	(revision 844)
++++ src/gtk/RecentChooserWidget.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gtkRecentChooserWidget = gtkRecentChooserWidget;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentChooserWidget = cast(GtkRecentChooserWidget*)obj;
+Index: src/gtk/VScrollbar.d
+===================================================================
+--- src/gtk/VScrollbar.d	(revision 844)
++++ src/gtk/VScrollbar.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gtkVScrollbar = gtkVScrollbar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVScrollbar = cast(GtkVScrollbar*)obj;
+Index: src/gtk/CellView.d
+===================================================================
+--- src/gtk/CellView.d	(revision 844)
++++ src/gtk/CellView.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gtkCellView = gtkCellView;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellView = cast(GtkCellView*)obj;
+Index: src/gtk/ToggleButton.d
+===================================================================
+--- src/gtk/ToggleButton.d	(revision 844)
++++ src/gtk/ToggleButton.d	(working copy)
+@@ -159,7 +159,7 @@
+ 		this.gtkToggleButton = gtkToggleButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToggleButton = cast(GtkToggleButton*)obj;
+Index: src/gtk/VScale.d
+===================================================================
+--- src/gtk/VScale.d	(revision 844)
++++ src/gtk/VScale.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gtkVScale = gtkVScale;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVScale = cast(GtkVScale*)obj;
+Index: src/gtk/Alignment.d
+===================================================================
+--- src/gtk/Alignment.d	(revision 844)
++++ src/gtk/Alignment.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkAlignment = gtkAlignment;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAlignment = cast(GtkAlignment*)obj;
+Index: src/gtk/RecentAction.d
+===================================================================
+--- src/gtk/RecentAction.d	(revision 844)
++++ src/gtk/RecentAction.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkRecentAction = gtkRecentAction;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentAction = cast(GtkRecentAction*)obj;
+Index: src/gtk/VBox.d
+===================================================================
+--- src/gtk/VBox.d	(revision 844)
++++ src/gtk/VBox.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gtkVBox = gtkVBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVBox = cast(GtkVBox*)obj;
+Index: src/gtk/ToggleAction.d
+===================================================================
+--- src/gtk/ToggleAction.d	(revision 844)
++++ src/gtk/ToggleAction.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gtkToggleAction = gtkToggleAction;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToggleAction = cast(GtkToggleAction*)obj;
+Index: src/gtk/ScaleButton.d
+===================================================================
+--- src/gtk/ScaleButton.d	(revision 844)
++++ src/gtk/ScaleButton.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gtkScaleButton = gtkScaleButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkScaleButton = cast(GtkScaleButton*)obj;
+Index: src/gtk/IMContextSimple.d
+===================================================================
+--- src/gtk/IMContextSimple.d	(revision 844)
++++ src/gtk/IMContextSimple.d	(working copy)
+@@ -108,7 +108,7 @@
+ 		this.gtkIMContextSimple = gtkIMContextSimple;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIMContextSimple = cast(GtkIMContextSimple*)obj;
+Index: src/gtk/ButtonBox.d
+===================================================================
+--- src/gtk/ButtonBox.d	(revision 844)
++++ src/gtk/ButtonBox.d	(working copy)
+@@ -129,7 +129,7 @@
+ 		this.gtkButtonBox = gtkButtonBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkButtonBox = cast(GtkButtonBox*)obj;
+Index: src/gtk/Curve.d
+===================================================================
+--- src/gtk/Curve.d	(revision 844)
++++ src/gtk/Curve.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkCurve = gtkCurve;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCurve = cast(GtkCurve*)obj;
+Index: src/gtk/TearoffMenuItem.d
+===================================================================
+--- src/gtk/TearoffMenuItem.d	(revision 844)
++++ src/gtk/TearoffMenuItem.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkTearoffMenuItem = gtkTearoffMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTearoffMenuItem = cast(GtkTearoffMenuItem*)obj;
+Index: src/gtk/CellRendererProgress.d
+===================================================================
+--- src/gtk/CellRendererProgress.d	(revision 844)
++++ src/gtk/CellRendererProgress.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gtkCellRendererProgress = gtkCellRendererProgress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererProgress = cast(GtkCellRendererProgress*)obj;
+Index: src/gtk/Range.d
+===================================================================
+--- src/gtk/Range.d	(revision 844)
++++ src/gtk/Range.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkRange = gtkRange;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRange = cast(GtkRange*)obj;
+Index: src/gtk/Clipboard.d
+===================================================================
+--- src/gtk/Clipboard.d	(revision 844)
++++ src/gtk/Clipboard.d	(working copy)
+@@ -175,7 +175,7 @@
+ 		this.gtkClipboard = gtkClipboard;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkClipboard = cast(GtkClipboard*)obj;
+Index: src/gtk/Fixed.d
+===================================================================
+--- src/gtk/Fixed.d	(revision 844)
++++ src/gtk/Fixed.d	(working copy)
+@@ -137,7 +137,7 @@
+ 		this.gtkFixed = gtkFixed;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFixed = cast(GtkFixed*)obj;
+Index: src/gtk/PrintContext.d
+===================================================================
+--- src/gtk/PrintContext.d	(revision 844)
++++ src/gtk/PrintContext.d	(working copy)
+@@ -209,7 +209,7 @@
+ 		this.gtkPrintContext = gtkPrintContext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrintContext = cast(GtkPrintContext*)obj;
+Index: src/gtk/FontButton.d
+===================================================================
+--- src/gtk/FontButton.d	(revision 844)
++++ src/gtk/FontButton.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gtkFontButton = gtkFontButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFontButton = cast(GtkFontButton*)obj;
+Index: src/gtk/MessageDialog.d
+===================================================================
+--- src/gtk/MessageDialog.d	(revision 844)
++++ src/gtk/MessageDialog.d	(working copy)
+@@ -162,7 +162,7 @@
+ 		this.gtkMessageDialog = gtkMessageDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMessageDialog = cast(GtkMessageDialog*)obj;
+Index: src/gtk/TreeSelection.d
+===================================================================
+--- src/gtk/TreeSelection.d	(revision 844)
++++ src/gtk/TreeSelection.d	(working copy)
+@@ -150,7 +150,7 @@
+ 		this.gtkTreeSelection = gtkTreeSelection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeSelection = cast(GtkTreeSelection*)obj;
+Index: src/gtk/Statusbar.d
+===================================================================
+--- src/gtk/Statusbar.d	(revision 844)
++++ src/gtk/Statusbar.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gtkStatusbar = gtkStatusbar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkStatusbar = cast(GtkStatusbar*)obj;
+Index: src/gtk/Bin.d
+===================================================================
+--- src/gtk/Bin.d	(revision 844)
++++ src/gtk/Bin.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkBin = gtkBin;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkBin = cast(GtkBin*)obj;
+Index: src/gtk/IMContext.d
+===================================================================
+--- src/gtk/IMContext.d	(revision 844)
++++ src/gtk/IMContext.d	(working copy)
+@@ -173,7 +173,7 @@
+ 		this.gtkIMContext = gtkIMContext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIMContext = cast(GtkIMContext*)obj;
+Index: src/gtk/RecentManager.d
+===================================================================
+--- src/gtk/RecentManager.d	(revision 844)
++++ src/gtk/RecentManager.d	(working copy)
+@@ -176,7 +176,7 @@
+ 		this.gtkRecentManager = gtkRecentManager;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentManager = cast(GtkRecentManager*)obj;
+Index: src/gtk/IconTheme.d
+===================================================================
+--- src/gtk/IconTheme.d	(revision 844)
++++ src/gtk/IconTheme.d	(working copy)
+@@ -210,7 +210,7 @@
+ 		this.gtkIconTheme = gtkIconTheme;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIconTheme = cast(GtkIconTheme*)obj;
+Index: src/gtk/VPaned.d
+===================================================================
+--- src/gtk/VPaned.d	(revision 844)
++++ src/gtk/VPaned.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gtkVPaned = gtkVPaned;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVPaned = cast(GtkVPaned*)obj;
+Index: src/gtk/Viewport.d
+===================================================================
+--- src/gtk/Viewport.d	(revision 844)
++++ src/gtk/Viewport.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gtkViewport = gtkViewport;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkViewport = cast(GtkViewport*)obj;
+Index: src/gtk/InputDialog.d
+===================================================================
+--- src/gtk/InputDialog.d	(revision 844)
++++ src/gtk/InputDialog.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gtkInputDialog = gtkInputDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkInputDialog = cast(GtkInputDialog*)obj;
+Index: src/gtk/PrintUnixDialog.d
+===================================================================
+--- src/gtk/PrintUnixDialog.d	(revision 844)
++++ src/gtk/PrintUnixDialog.d	(working copy)
+@@ -184,7 +184,7 @@
+ 		this.gtkPrintUnixDialog = gtkPrintUnixDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrintUnixDialog = cast(GtkPrintUnixDialog*)obj;
+Index: src/gtk/CheckMenuItem.d
+===================================================================
+--- src/gtk/CheckMenuItem.d	(revision 844)
++++ src/gtk/CheckMenuItem.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkCheckMenuItem = gtkCheckMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCheckMenuItem = cast(GtkCheckMenuItem*)obj;
+Index: src/gtk/Ruler.d
+===================================================================
+--- src/gtk/Ruler.d	(revision 844)
++++ src/gtk/Ruler.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkRuler = gtkRuler;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRuler = cast(GtkRuler*)obj;
+Index: src/gtk/RadioButton.d
+===================================================================
+--- src/gtk/RadioButton.d	(revision 844)
++++ src/gtk/RadioButton.d	(working copy)
+@@ -179,7 +179,7 @@
+ 		this.gtkRadioButton = gtkRadioButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRadioButton = cast(GtkRadioButton*)obj;
+Index: src/gtk/EntryBuffer.d
+===================================================================
+--- src/gtk/EntryBuffer.d	(revision 844)
++++ src/gtk/EntryBuffer.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkEntryBuffer = gtkEntryBuffer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkEntryBuffer = cast(GtkEntryBuffer*)obj;
+Index: src/gtk/EntryCompletion.d
+===================================================================
+--- src/gtk/EntryCompletion.d	(revision 844)
++++ src/gtk/EntryCompletion.d	(working copy)
+@@ -144,7 +144,7 @@
+ 		this.gtkEntryCompletion = gtkEntryCompletion;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkEntryCompletion = cast(GtkEntryCompletion*)obj;
+Index: src/gtk/Misc.d
+===================================================================
+--- src/gtk/Misc.d	(revision 844)
++++ src/gtk/Misc.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkMisc = gtkMisc;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMisc = cast(GtkMisc*)obj;
+Index: src/gtk/ToolPalette.d
+===================================================================
+--- src/gtk/ToolPalette.d	(revision 844)
++++ src/gtk/ToolPalette.d	(working copy)
+@@ -217,7 +217,7 @@
+ 		this.gtkToolPalette = gtkToolPalette;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToolPalette = cast(GtkToolPalette*)obj;
+Index: src/gtk/RadioAction.d
+===================================================================
+--- src/gtk/RadioAction.d	(revision 844)
++++ src/gtk/RadioAction.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkRadioAction = gtkRadioAction;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRadioAction = cast(GtkRadioAction*)obj;
+Index: src/gtk/FontSelectionDialog.d
+===================================================================
+--- src/gtk/FontSelectionDialog.d	(revision 844)
++++ src/gtk/FontSelectionDialog.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkFontSelectionDialog = gtkFontSelectionDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFontSelectionDialog = cast(GtkFontSelectionDialog*)obj;
+Index: src/gtk/MenuShell.d
+===================================================================
+--- src/gtk/MenuShell.d	(revision 844)
++++ src/gtk/MenuShell.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkMenuShell = gtkMenuShell;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMenuShell = cast(GtkMenuShell*)obj;
+Index: src/gtk/Style.d
+===================================================================
+--- src/gtk/Style.d	(revision 844)
++++ src/gtk/Style.d	(working copy)
+@@ -146,7 +146,7 @@
+ 		this.gtkStyle = gtkStyle;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkStyle = cast(GtkStyle*)obj;
+Index: src/gtk/HBox.d
+===================================================================
+--- src/gtk/HBox.d	(revision 844)
++++ src/gtk/HBox.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gtkHBox = gtkHBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHBox = cast(GtkHBox*)obj;
+Index: src/gtk/Image.d
+===================================================================
+--- src/gtk/Image.d	(revision 844)
++++ src/gtk/Image.d	(working copy)
+@@ -241,7 +241,7 @@
+ 		this.gtkImage = gtkImage;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkImage = cast(GtkImage*)obj;
+Index: src/gtk/Widget.d
+===================================================================
+--- src/gtk/Widget.d	(revision 844)
++++ src/gtk/Widget.d	(working copy)
+@@ -276,7 +276,7 @@
+ 		this.gtkWidget = gtkWidget;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkWidget = cast(GtkWidget*)obj;
+Index: src/gtk/Invisible.d
+===================================================================
+--- src/gtk/Invisible.d	(revision 844)
++++ src/gtk/Invisible.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkInvisible = gtkInvisible;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkInvisible = cast(GtkInvisible*)obj;
+Index: src/gtk/IMMulticontext.d
+===================================================================
+--- src/gtk/IMMulticontext.d	(revision 844)
++++ src/gtk/IMMulticontext.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkIMMulticontext = gtkIMMulticontext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIMMulticontext = cast(GtkIMMulticontext*)obj;
+Index: src/gtk/TreeModelFilter.d
+===================================================================
+--- src/gtk/TreeModelFilter.d	(revision 844)
++++ src/gtk/TreeModelFilter.d	(working copy)
+@@ -137,7 +137,7 @@
+ 		this.gtkTreeModelFilter = gtkTreeModelFilter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeModelFilter = cast(GtkTreeModelFilter*)obj;
+Index: src/gtk/GammaCurve.d
+===================================================================
+--- src/gtk/GammaCurve.d	(revision 844)
++++ src/gtk/GammaCurve.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gtkGammaCurve = gtkGammaCurve;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkGammaCurve = cast(GtkGammaCurve*)obj;
+Index: src/gtk/PrintJob.d
+===================================================================
+--- src/gtk/PrintJob.d	(revision 844)
++++ src/gtk/PrintJob.d	(working copy)
+@@ -134,7 +134,7 @@
+ 		this.gtkPrintJob = gtkPrintJob;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrintJob = cast(GtkPrintJob*)obj;
+Index: src/gtk/ProgressBar.d
+===================================================================
+--- src/gtk/ProgressBar.d	(revision 844)
++++ src/gtk/ProgressBar.d	(working copy)
+@@ -140,7 +140,7 @@
+ 		this.gtkProgressBar = gtkProgressBar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkProgressBar = cast(GtkProgressBar*)obj;
+Index: src/gtk/Tooltip.d
+===================================================================
+--- src/gtk/Tooltip.d	(revision 844)
++++ src/gtk/Tooltip.d	(working copy)
+@@ -155,7 +155,7 @@
+ 		this.gtkTooltip = gtkTooltip;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTooltip = cast(GtkTooltip*)obj;
+Index: src/gtk/AboutDialog.d
+===================================================================
+--- src/gtk/AboutDialog.d	(revision 844)
++++ src/gtk/AboutDialog.d	(working copy)
+@@ -162,7 +162,7 @@
+ 		this.gtkAboutDialog = gtkAboutDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAboutDialog = cast(GtkAboutDialog*)obj;
+Index: src/gtk/StatusIcon.d
+===================================================================
+--- src/gtk/StatusIcon.d	(revision 844)
++++ src/gtk/StatusIcon.d	(working copy)
+@@ -146,7 +146,7 @@
+ 		this.gtkStatusIcon = gtkStatusIcon;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkStatusIcon = cast(GtkStatusIcon*)obj;
+Index: src/gtk/HButtonBox.d
+===================================================================
+--- src/gtk/HButtonBox.d	(revision 844)
++++ src/gtk/HButtonBox.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gtkHButtonBox = gtkHButtonBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHButtonBox = cast(GtkHButtonBox*)obj;
+Index: src/gtk/Settings.d
+===================================================================
+--- src/gtk/Settings.d	(revision 844)
++++ src/gtk/Settings.d	(working copy)
+@@ -145,7 +145,7 @@
+ 		this.gtkSettings = gtkSettings;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSettings = cast(GtkSettings*)obj;
+Index: src/gtk/Separator.d
+===================================================================
+--- src/gtk/Separator.d	(revision 844)
++++ src/gtk/Separator.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gtkSeparator = gtkSeparator;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSeparator = cast(GtkSeparator*)obj;
+Index: src/gtk/FileChooserWidget.d
+===================================================================
+--- src/gtk/FileChooserWidget.d	(revision 844)
++++ src/gtk/FileChooserWidget.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkFileChooserWidget = gtkFileChooserWidget;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFileChooserWidget = cast(GtkFileChooserWidget*)obj;
+Index: src/gtk/AccelLabel.d
+===================================================================
+--- src/gtk/AccelLabel.d	(revision 844)
++++ src/gtk/AccelLabel.d	(working copy)
+@@ -173,7 +173,7 @@
+ 		this.gtkAccelLabel = gtkAccelLabel;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAccelLabel = cast(GtkAccelLabel*)obj;
+Index: src/gtk/Plug.d
+===================================================================
+--- src/gtk/Plug.d	(revision 844)
++++ src/gtk/Plug.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gtkPlug = gtkPlug;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPlug = cast(GtkPlug*)obj;
+Index: src/gtk/PrintSettings.d
+===================================================================
+--- src/gtk/PrintSettings.d	(revision 844)
++++ src/gtk/PrintSettings.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkPrintSettings = gtkPrintSettings;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrintSettings = cast(GtkPrintSettings*)obj;
+Index: src/gtk/Adjustment.d
+===================================================================
+--- src/gtk/Adjustment.d	(revision 844)
++++ src/gtk/Adjustment.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gtkAdjustment = gtkAdjustment;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAdjustment = cast(GtkAdjustment*)obj;
+Index: src/gtk/RecentChooserDialog.d
+===================================================================
+--- src/gtk/RecentChooserDialog.d	(revision 844)
++++ src/gtk/RecentChooserDialog.d	(working copy)
+@@ -148,7 +148,7 @@
+ 		this.gtkRecentChooserDialog = gtkRecentChooserDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentChooserDialog = cast(GtkRecentChooserDialog*)obj;
+Index: src/gtk/Scrollbar.d
+===================================================================
+--- src/gtk/Scrollbar.d	(revision 844)
++++ src/gtk/Scrollbar.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkScrollbar = gtkScrollbar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkScrollbar = cast(GtkScrollbar*)obj;
+Index: src/gtk/FileSelection.d
+===================================================================
+--- src/gtk/FileSelection.d	(revision 844)
++++ src/gtk/FileSelection.d	(working copy)
+@@ -176,7 +176,7 @@
+ 		this.gtkFileSelection = gtkFileSelection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFileSelection = cast(GtkFileSelection*)obj;
+Index: src/gtk/Scale.d
+===================================================================
+--- src/gtk/Scale.d	(revision 844)
++++ src/gtk/Scale.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkScale = gtkScale;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkScale = cast(GtkScale*)obj;
+Index: src/gtk/Table.d
+===================================================================
+--- src/gtk/Table.d	(revision 844)
++++ src/gtk/Table.d	(working copy)
+@@ -122,7 +122,7 @@
+ 		this.gtkTable = gtkTable;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTable = cast(GtkTable*)obj;
+Index: src/gtk/RadioToolButton.d
+===================================================================
+--- src/gtk/RadioToolButton.d	(revision 844)
++++ src/gtk/RadioToolButton.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkRadioToolButton = gtkRadioToolButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRadioToolButton = cast(GtkRadioToolButton*)obj;
+Index: src/gtk/Frame.d
+===================================================================
+--- src/gtk/Frame.d	(revision 844)
++++ src/gtk/Frame.d	(working copy)
+@@ -138,7 +138,7 @@
+ 		this.gtkFrame = gtkFrame;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFrame = cast(GtkFrame*)obj;
+Index: src/gtk/ActionGroup.d
+===================================================================
+--- src/gtk/ActionGroup.d	(revision 844)
++++ src/gtk/ActionGroup.d	(working copy)
+@@ -170,7 +170,7 @@
+ 		this.gtkActionGroup = gtkActionGroup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkActionGroup = cast(GtkActionGroup*)obj;
+Index: src/gtk/PageSetup.d
+===================================================================
+--- src/gtk/PageSetup.d	(revision 844)
++++ src/gtk/PageSetup.d	(working copy)
+@@ -162,7 +162,7 @@
+ 		this.gtkPageSetup = gtkPageSetup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPageSetup = cast(GtkPageSetup*)obj;
+Index: src/gtk/MenuToolButton.d
+===================================================================
+--- src/gtk/MenuToolButton.d	(revision 844)
++++ src/gtk/MenuToolButton.d	(working copy)
+@@ -129,7 +129,7 @@
+ 		this.gtkMenuToolButton = gtkMenuToolButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMenuToolButton = cast(GtkMenuToolButton*)obj;
+Index: src/gtk/Item.d
+===================================================================
+--- src/gtk/Item.d	(revision 844)
++++ src/gtk/Item.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gtkItem = gtkItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkItem = cast(GtkItem*)obj;
+Index: src/gtk/HRuler.d
+===================================================================
+--- src/gtk/HRuler.d	(revision 844)
++++ src/gtk/HRuler.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkHRuler = gtkHRuler;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHRuler = cast(GtkHRuler*)obj;
+Index: src/gtk/Progress.d
+===================================================================
+--- src/gtk/Progress.d	(revision 844)
++++ src/gtk/Progress.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkProgress = gtkProgress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkProgress = cast(GtkProgress*)obj;
+Index: src/gtk/ComboBox.d
+===================================================================
+--- src/gtk/ComboBox.d	(revision 844)
++++ src/gtk/ComboBox.d	(working copy)
+@@ -152,7 +152,7 @@
+ 		this.gtkComboBox = gtkComboBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkComboBox = cast(GtkComboBox*)obj;
+Index: src/gtk/Calendar.d
+===================================================================
+--- src/gtk/Calendar.d	(revision 844)
++++ src/gtk/Calendar.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkCalendar = gtkCalendar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCalendar = cast(GtkCalendar*)obj;
+Index: src/gtk/ToolButton.d
+===================================================================
+--- src/gtk/ToolButton.d	(revision 844)
++++ src/gtk/ToolButton.d	(working copy)
+@@ -129,7 +129,7 @@
+ 		this.gtkToolButton = gtkToolButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToolButton = cast(GtkToolButton*)obj;
+Index: src/gtk/ObjectGtk.d
+===================================================================
+--- src/gtk/ObjectGtk.d	(revision 844)
++++ src/gtk/ObjectGtk.d	(working copy)
+@@ -170,7 +170,7 @@
+ 		this.gtkObject = gtkObject;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkObject = cast(GtkObject*)obj;
+Index: src/gtk/TextBuffer.d
+===================================================================
+--- src/gtk/TextBuffer.d	(revision 844)
++++ src/gtk/TextBuffer.d	(working copy)
+@@ -177,7 +177,7 @@
+ 		this.gtkTextBuffer = gtkTextBuffer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTextBuffer = cast(GtkTextBuffer*)obj;
+Index: src/gtk/Label.d
+===================================================================
+--- src/gtk/Label.d	(revision 844)
++++ src/gtk/Label.d	(working copy)
+@@ -236,7 +236,7 @@
+ 		this.gtkLabel = gtkLabel;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkLabel = cast(GtkLabel*)obj;
+Index: src/gtk/Notebook.d
+===================================================================
+--- src/gtk/Notebook.d	(revision 844)
++++ src/gtk/Notebook.d	(working copy)
+@@ -158,7 +158,7 @@
+ 		this.gtkNotebook = gtkNotebook;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkNotebook = cast(GtkNotebook*)obj;
+Index: src/gtk/MountOperation.d
+===================================================================
+--- src/gtk/MountOperation.d	(revision 844)
++++ src/gtk/MountOperation.d	(working copy)
+@@ -131,7 +131,7 @@
+ 		this.gtkMountOperation = gtkMountOperation;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMountOperation = cast(GtkMountOperation*)obj;
+Index: src/gtk/CellRendererPixbuf.d
+===================================================================
+--- src/gtk/CellRendererPixbuf.d	(revision 844)
++++ src/gtk/CellRendererPixbuf.d	(working copy)
+@@ -122,7 +122,7 @@
+ 		this.gtkCellRendererPixbuf = gtkCellRendererPixbuf;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererPixbuf = cast(GtkCellRendererPixbuf*)obj;
+Index: src/gtk/ColorSelection.d
+===================================================================
+--- src/gtk/ColorSelection.d	(revision 844)
++++ src/gtk/ColorSelection.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkColorSelection = gtkColorSelection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkColorSelection = cast(GtkColorSelection*)obj;
+Index: src/gtk/DrawingArea.d
+===================================================================
+--- src/gtk/DrawingArea.d	(revision 844)
++++ src/gtk/DrawingArea.d	(working copy)
+@@ -171,7 +171,7 @@
+ 		this.gtkDrawingArea = gtkDrawingArea;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkDrawingArea = cast(GtkDrawingArea*)obj;
+Index: src/gtk/WindowGroup.d
+===================================================================
+--- src/gtk/WindowGroup.d	(revision 844)
++++ src/gtk/WindowGroup.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gtkWindowGroup = gtkWindowGroup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkWindowGroup = cast(GtkWindowGroup*)obj;
+Index: src/gtk/RcStyle.d
+===================================================================
+--- src/gtk/RcStyle.d	(revision 844)
++++ src/gtk/RcStyle.d	(working copy)
+@@ -560,7 +560,7 @@
+ 		this.gtkRcStyle = gtkRcStyle;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRcStyle = cast(GtkRcStyle*)obj;
+Index: src/gtk/ItemFactory.d
+===================================================================
+--- src/gtk/ItemFactory.d	(revision 844)
++++ src/gtk/ItemFactory.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkItemFactory = gtkItemFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkItemFactory = cast(GtkItemFactory*)obj;
+Index: src/gtk/Paned.d
+===================================================================
+--- src/gtk/Paned.d	(revision 844)
++++ src/gtk/Paned.d	(working copy)
+@@ -170,7 +170,7 @@
+ 		this.gtkPaned = gtkPaned;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPaned = cast(GtkPaned*)obj;
+Index: src/gtk/RecentChooserMenu.d
+===================================================================
+--- src/gtk/RecentChooserMenu.d	(revision 844)
++++ src/gtk/RecentChooserMenu.d	(working copy)
+@@ -138,7 +138,7 @@
+ 		this.gtkRecentChooserMenu = gtkRecentChooserMenu;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentChooserMenu = cast(GtkRecentChooserMenu*)obj;
+Index: src/gtk/TreeModelSort.d
+===================================================================
+--- src/gtk/TreeModelSort.d	(revision 844)
++++ src/gtk/TreeModelSort.d	(working copy)
+@@ -264,7 +264,7 @@
+ 		this.gtkTreeModelSort = gtkTreeModelSort;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeModelSort = cast(GtkTreeModelSort*)obj;
+Index: src/gtk/Arrow.d
+===================================================================
+--- src/gtk/Arrow.d	(revision 844)
++++ src/gtk/Arrow.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkArrow = gtkArrow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkArrow = cast(GtkArrow*)obj;
+Index: src/gtk/AspectFrame.d
+===================================================================
+--- src/gtk/AspectFrame.d	(revision 844)
++++ src/gtk/AspectFrame.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gtkAspectFrame = gtkAspectFrame;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAspectFrame = cast(GtkAspectFrame*)obj;
+Index: src/gtk/ScrolledWindow.d
+===================================================================
+--- src/gtk/ScrolledWindow.d	(revision 844)
++++ src/gtk/ScrolledWindow.d	(working copy)
+@@ -146,7 +146,7 @@
+ 		this.gtkScrolledWindow = gtkScrolledWindow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkScrolledWindow = cast(GtkScrolledWindow*)obj;
+Index: src/gtk/CellRendererSpin.d
+===================================================================
+--- src/gtk/CellRendererSpin.d	(revision 844)
++++ src/gtk/CellRendererSpin.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkCellRendererSpin = gtkCellRendererSpin;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererSpin = cast(GtkCellRendererSpin*)obj;
+Index: src/gtk/SpinButton.d
+===================================================================
+--- src/gtk/SpinButton.d	(revision 844)
++++ src/gtk/SpinButton.d	(working copy)
+@@ -194,7 +194,7 @@
+ 		this.gtkSpinButton = gtkSpinButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSpinButton = cast(GtkSpinButton*)obj;
+Index: src/gtk/CellRendererSpinner.d
+===================================================================
+--- src/gtk/CellRendererSpinner.d	(revision 844)
++++ src/gtk/CellRendererSpinner.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkCellRendererSpinner = gtkCellRendererSpinner;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererSpinner = cast(GtkCellRendererSpinner*)obj;
+Index: src/gtk/Window.d
+===================================================================
+--- src/gtk/Window.d	(revision 844)
++++ src/gtk/Window.d	(working copy)
+@@ -153,7 +153,7 @@
+ 		this.gtkWindow = gtkWindow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkWindow = cast(GtkWindow*)obj;
+Index: src/gtk/HSeparator.d
+===================================================================
+--- src/gtk/HSeparator.d	(revision 844)
++++ src/gtk/HSeparator.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkHSeparator = gtkHSeparator;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHSeparator = cast(GtkHSeparator*)obj;
+Index: src/gtk/VButtonBox.d
+===================================================================
+--- src/gtk/VButtonBox.d	(revision 844)
++++ src/gtk/VButtonBox.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gtkVButtonBox = gtkVButtonBox;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVButtonBox = cast(GtkVButtonBox*)obj;
+Index: src/gtk/TreeStore.d
+===================================================================
+--- src/gtk/TreeStore.d	(revision 844)
++++ src/gtk/TreeStore.d	(working copy)
+@@ -166,7 +166,7 @@
+ 		this.gtkTreeStore = gtkTreeStore;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeStore = cast(GtkTreeStore*)obj;
+Index: src/gtk/PageSetupUnixDialog.d
+===================================================================
+--- src/gtk/PageSetupUnixDialog.d	(revision 844)
++++ src/gtk/PageSetupUnixDialog.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkPageSetupUnixDialog = gtkPageSetupUnixDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPageSetupUnixDialog = cast(GtkPageSetupUnixDialog*)obj;
+Index: src/gtk/Container.d
+===================================================================
+--- src/gtk/Container.d	(revision 844)
++++ src/gtk/Container.d	(working copy)
+@@ -219,7 +219,7 @@
+ 		this.gtkContainer = gtkContainer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkContainer = cast(GtkContainer*)obj;
+Index: src/gtk/Printer.d
+===================================================================
+--- src/gtk/Printer.d	(revision 844)
++++ src/gtk/Printer.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gtkPrinter = gtkPrinter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkPrinter = cast(GtkPrinter*)obj;
+Index: src/gtk/MenuItem.d
+===================================================================
+--- src/gtk/MenuItem.d	(revision 844)
++++ src/gtk/MenuItem.d	(working copy)
+@@ -144,7 +144,7 @@
+ 		this.gtkMenuItem = gtkMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMenuItem = cast(GtkMenuItem*)obj;
+Index: src/gtk/CellRendererCombo.d
+===================================================================
+--- src/gtk/CellRendererCombo.d	(revision 844)
++++ src/gtk/CellRendererCombo.d	(working copy)
+@@ -127,7 +127,7 @@
+ 		this.gtkCellRendererCombo = gtkCellRendererCombo;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererCombo = cast(GtkCellRendererCombo*)obj;
+Index: src/gtk/RecentFilter.d
+===================================================================
+--- src/gtk/RecentFilter.d	(revision 844)
++++ src/gtk/RecentFilter.d	(working copy)
+@@ -122,7 +122,7 @@
+ 		this.gtkRecentFilter = gtkRecentFilter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkRecentFilter = cast(GtkRecentFilter*)obj;
+Index: src/gtk/ListStore.d
+===================================================================
+--- src/gtk/ListStore.d	(revision 844)
++++ src/gtk/ListStore.d	(working copy)
+@@ -316,7 +316,7 @@
+ 		this.gtkListStore = gtkListStore;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkListStore = cast(GtkListStore*)obj;
+Index: src/gtk/Socket.d
+===================================================================
+--- src/gtk/Socket.d	(revision 844)
++++ src/gtk/Socket.d	(working copy)
+@@ -171,7 +171,7 @@
+ 		this.gtkSocket = gtkSocket;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSocket = cast(GtkSocket*)obj;
+Index: src/gtk/MenuBar.d
+===================================================================
+--- src/gtk/MenuBar.d	(revision 844)
++++ src/gtk/MenuBar.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkMenuBar = gtkMenuBar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkMenuBar = cast(GtkMenuBar*)obj;
+Index: src/gtk/ComboBoxEntry.d
+===================================================================
+--- src/gtk/ComboBoxEntry.d	(revision 844)
++++ src/gtk/ComboBoxEntry.d	(working copy)
+@@ -137,7 +137,7 @@
+ 		this.gtkComboBoxEntry = gtkComboBoxEntry;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkComboBoxEntry = cast(GtkComboBoxEntry*)obj;
+Index: src/gtk/HScrollbar.d
+===================================================================
+--- src/gtk/HScrollbar.d	(revision 844)
++++ src/gtk/HScrollbar.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gtkHScrollbar = gtkHScrollbar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHScrollbar = cast(GtkHScrollbar*)obj;
+Index: src/gtk/ToolItem.d
+===================================================================
+--- src/gtk/ToolItem.d	(revision 844)
++++ src/gtk/ToolItem.d	(working copy)
+@@ -133,7 +133,7 @@
+ 		this.gtkToolItem = gtkToolItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToolItem = cast(GtkToolItem*)obj;
+Index: src/gtk/HScale.d
+===================================================================
+--- src/gtk/HScale.d	(revision 844)
++++ src/gtk/HScale.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gtkHScale = gtkHScale;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkHScale = cast(GtkHScale*)obj;
+Index: src/gtk/Dialog.d
+===================================================================
+--- src/gtk/Dialog.d	(revision 844)
++++ src/gtk/Dialog.d	(working copy)
+@@ -252,7 +252,7 @@
+ 		this.gtkDialog = gtkDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkDialog = cast(GtkDialog*)obj;
+Index: src/gtk/Entry.d
+===================================================================
+--- src/gtk/Entry.d	(revision 844)
++++ src/gtk/Entry.d	(working copy)
+@@ -179,7 +179,7 @@
+ 		this.gtkEntry = gtkEntry;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkEntry = cast(GtkEntry*)obj;
+Index: src/gtk/Toolbar.d
+===================================================================
+--- src/gtk/Toolbar.d	(revision 844)
++++ src/gtk/Toolbar.d	(working copy)
+@@ -145,7 +145,7 @@
+ 		this.gtkToolbar = gtkToolbar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToolbar = cast(GtkToolbar*)obj;
+Index: src/gtk/CellRenderer.d
+===================================================================
+--- src/gtk/CellRenderer.d	(revision 844)
++++ src/gtk/CellRenderer.d	(working copy)
+@@ -152,7 +152,7 @@
+ 		this.gtkCellRenderer = gtkCellRenderer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRenderer = cast(GtkCellRenderer*)obj;
+Index: src/gtk/CellRendererToggle.d
+===================================================================
+--- src/gtk/CellRendererToggle.d	(revision 844)
++++ src/gtk/CellRendererToggle.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkCellRendererToggle = gtkCellRendererToggle;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCellRendererToggle = cast(GtkCellRendererToggle*)obj;
+Index: src/gtk/TreeViewColumn.d
+===================================================================
+--- src/gtk/TreeViewColumn.d	(revision 844)
++++ src/gtk/TreeViewColumn.d	(working copy)
+@@ -146,7 +146,7 @@
+ 		this.gtkTreeViewColumn = gtkTreeViewColumn;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeViewColumn = cast(GtkTreeViewColumn*)obj;
+Index: src/gtk/UIManager.d
+===================================================================
+--- src/gtk/UIManager.d	(revision 844)
++++ src/gtk/UIManager.d	(working copy)
+@@ -357,7 +357,7 @@
+ 		this.gtkUIManager = gtkUIManager;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkUIManager = cast(GtkUIManager*)obj;
+Index: src/gtk/CheckButton.d
+===================================================================
+--- src/gtk/CheckButton.d	(revision 844)
++++ src/gtk/CheckButton.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gtkCheckButton = gtkCheckButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkCheckButton = cast(GtkCheckButton*)obj;
+Index: src/gtk/ToolItemGroup.d
+===================================================================
+--- src/gtk/ToolItemGroup.d	(revision 844)
++++ src/gtk/ToolItemGroup.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gtkToolItemGroup = gtkToolItemGroup;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToolItemGroup = cast(GtkToolItemGroup*)obj;
+Index: src/gtk/ColorButton.d
+===================================================================
+--- src/gtk/ColorButton.d	(revision 844)
++++ src/gtk/ColorButton.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gtkColorButton = gtkColorButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkColorButton = cast(GtkColorButton*)obj;
+Index: src/gtk/Button.d
+===================================================================
+--- src/gtk/Button.d	(revision 844)
++++ src/gtk/Button.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkButton = gtkButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkButton = cast(GtkButton*)obj;
+Index: src/gtk/ToggleToolButton.d
+===================================================================
+--- src/gtk/ToggleToolButton.d	(revision 844)
++++ src/gtk/ToggleToolButton.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkToggleToolButton = gtkToggleToolButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkToggleToolButton = cast(GtkToggleToolButton*)obj;
+Index: src/gtk/Action.d
+===================================================================
+--- src/gtk/Action.d	(revision 844)
++++ src/gtk/Action.d	(working copy)
+@@ -157,7 +157,7 @@
+ 		this.gtkAction = gtkAction;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkAction = cast(GtkAction*)obj;
+Index: src/gtk/TextView.d
+===================================================================
+--- src/gtk/TextView.d	(revision 844)
++++ src/gtk/TextView.d	(working copy)
+@@ -143,7 +143,7 @@
+ 		this.gtkTextView = gtkTextView;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTextView = cast(GtkTextView*)obj;
+Index: src/gtk/VRuler.d
+===================================================================
+--- src/gtk/VRuler.d	(revision 844)
++++ src/gtk/VRuler.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkVRuler = gtkVRuler;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkVRuler = cast(GtkVRuler*)obj;
+Index: src/gtk/IconFactory.d
+===================================================================
+--- src/gtk/IconFactory.d	(revision 844)
++++ src/gtk/IconFactory.d	(working copy)
+@@ -176,7 +176,7 @@
+ 		this.gtkIconFactory = gtkIconFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkIconFactory = cast(GtkIconFactory*)obj;
+Index: src/gtk/InfoBar.d
+===================================================================
+--- src/gtk/InfoBar.d	(revision 844)
++++ src/gtk/InfoBar.d	(working copy)
+@@ -187,7 +187,7 @@
+ 		this.gtkInfoBar = gtkInfoBar;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkInfoBar = cast(GtkInfoBar*)obj;
+Index: src/gtk/FileChooserDialog.d
+===================================================================
+--- src/gtk/FileChooserDialog.d	(revision 844)
++++ src/gtk/FileChooserDialog.d	(working copy)
+@@ -199,7 +199,7 @@
+ 		this.gtkFileChooserDialog = gtkFileChooserDialog;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkFileChooserDialog = cast(GtkFileChooserDialog*)obj;
+Index: src/gtk/ImageMenuItem.d
+===================================================================
+--- src/gtk/ImageMenuItem.d	(revision 844)
++++ src/gtk/ImageMenuItem.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkImageMenuItem = gtkImageMenuItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkImageMenuItem = cast(GtkImageMenuItem*)obj;
+Index: src/gtk/TextTagTable.d
+===================================================================
+--- src/gtk/TextTagTable.d	(revision 844)
++++ src/gtk/TextTagTable.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkTextTagTable = gtkTextTagTable;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTextTagTable = cast(GtkTextTagTable*)obj;
+Index: src/gtk/LinkButton.d
+===================================================================
+--- src/gtk/LinkButton.d	(revision 844)
++++ src/gtk/LinkButton.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gtkLinkButton = gtkLinkButton;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkLinkButton = cast(GtkLinkButton*)obj;
+Index: src/gtk/TreeView.d
+===================================================================
+--- src/gtk/TreeView.d	(revision 844)
++++ src/gtk/TreeView.d	(working copy)
+@@ -201,7 +201,7 @@
+ 		this.gtkTreeView = gtkTreeView;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkTreeView = cast(GtkTreeView*)obj;
+Index: src/glade/Glade.d
+===================================================================
+--- src/glade/Glade.d	(revision 844)
++++ src/glade/Glade.d	(working copy)
+@@ -136,7 +136,7 @@
+ 		this.gladeXML = gladeXML;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gladeXML = cast(GladeXML*)obj;
+Index: src/gobject/TypeModule.d
+===================================================================
+--- src/gobject/TypeModule.d	(revision 844)
++++ src/gobject/TypeModule.d	(working copy)
+@@ -137,7 +137,7 @@
+ 		this.gTypeModule = gTypeModule;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gTypeModule = cast(GTypeModule*)obj;
+Index: src/gio/Vfs.d
+===================================================================
+--- src/gio/Vfs.d	(revision 844)
++++ src/gio/Vfs.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gVfs = gVfs;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gVfs = cast(GVfs*)obj;
+Index: src/gio/MemoryOutputStream.d
+===================================================================
+--- src/gio/MemoryOutputStream.d	(revision 844)
++++ src/gio/MemoryOutputStream.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gMemoryOutputStream = gMemoryOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gMemoryOutputStream = cast(GMemoryOutputStream*)obj;
+Index: src/gio/DataOutputStream.d
+===================================================================
+--- src/gio/DataOutputStream.d	(revision 844)
++++ src/gio/DataOutputStream.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gDataOutputStream = gDataOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gDataOutputStream = cast(GDataOutputStream*)obj;
+Index: src/gio/SocketConnection.d
+===================================================================
+--- src/gio/SocketConnection.d	(revision 844)
++++ src/gio/SocketConnection.d	(working copy)
+@@ -127,7 +127,7 @@
+ 		this.gSocketConnection = gSocketConnection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketConnection = cast(GSocketConnection*)obj;
+Index: src/gio/SocketService.d
+===================================================================
+--- src/gio/SocketService.d	(revision 844)
++++ src/gio/SocketService.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gSocketService = gSocketService;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketService = cast(GSocketService*)obj;
+Index: src/gio/NetworkService.d
+===================================================================
+--- src/gio/NetworkService.d	(revision 844)
++++ src/gio/NetworkService.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gNetworkService = gNetworkService;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gNetworkService = cast(GNetworkService*)obj;
+Index: src/gio/FileEnumerator.d
+===================================================================
+--- src/gio/FileEnumerator.d	(revision 844)
++++ src/gio/FileEnumerator.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gFileEnumerator = gFileEnumerator;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileEnumerator = cast(GFileEnumerator*)obj;
+Index: src/gio/FilterOutputStream.d
+===================================================================
+--- src/gio/FilterOutputStream.d	(revision 844)
++++ src/gio/FilterOutputStream.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.gFilterOutputStream = gFilterOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFilterOutputStream = cast(GFilterOutputStream*)obj;
+Index: src/gio/EmblemedIcon.d
+===================================================================
+--- src/gio/EmblemedIcon.d	(revision 844)
++++ src/gio/EmblemedIcon.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gEmblemedIcon = gEmblemedIcon;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gEmblemedIcon = cast(GEmblemedIcon*)obj;
+Index: src/gio/FileMonitor.d
+===================================================================
+--- src/gio/FileMonitor.d	(revision 844)
++++ src/gio/FileMonitor.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gFileMonitor = gFileMonitor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileMonitor = cast(GFileMonitor*)obj;
+Index: src/gio/FileIcon.d
+===================================================================
+--- src/gio/FileIcon.d	(revision 844)
++++ src/gio/FileIcon.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gFileIcon = gFileIcon;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileIcon = cast(GFileIcon*)obj;
+Index: src/gio/SocketAddress.d
+===================================================================
+--- src/gio/SocketAddress.d	(revision 844)
++++ src/gio/SocketAddress.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gSocketAddress = gSocketAddress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketAddress = cast(GSocketAddress*)obj;
+Index: src/gio/NetworkAddress.d
+===================================================================
+--- src/gio/NetworkAddress.d	(revision 844)
++++ src/gio/NetworkAddress.d	(working copy)
+@@ -122,7 +122,7 @@
+ 		this.gNetworkAddress = gNetworkAddress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gNetworkAddress = cast(GNetworkAddress*)obj;
+Index: src/gio/Emblem.d
+===================================================================
+--- src/gio/Emblem.d	(revision 844)
++++ src/gio/Emblem.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gEmblem = gEmblem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gEmblem = cast(GEmblem*)obj;
+Index: src/gio/Resolver.d
+===================================================================
+--- src/gio/Resolver.d	(revision 844)
++++ src/gio/Resolver.d	(working copy)
+@@ -129,7 +129,7 @@
+ 		this.gResolver = gResolver;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gResolver = cast(GResolver*)obj;
+Index: src/gio/UnixFDMessage.d
+===================================================================
+--- src/gio/UnixFDMessage.d	(revision 844)
++++ src/gio/UnixFDMessage.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gUnixFDMessage = gUnixFDMessage;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixFDMessage = cast(GUnixFDMessage*)obj;
+Index: src/gio/DataInputStream.d
+===================================================================
+--- src/gio/DataInputStream.d	(revision 844)
++++ src/gio/DataInputStream.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gDataInputStream = gDataInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gDataInputStream = cast(GDataInputStream*)obj;
+Index: src/gio/FileInputStream.d
+===================================================================
+--- src/gio/FileInputStream.d	(revision 844)
++++ src/gio/FileInputStream.d	(working copy)
+@@ -132,7 +132,7 @@
+ 		this.gFileInputStream = gFileInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileInputStream = cast(GFileInputStream*)obj;
+Index: src/gio/InputStream.d
+===================================================================
+--- src/gio/InputStream.d	(revision 844)
++++ src/gio/InputStream.d	(working copy)
+@@ -120,7 +120,7 @@
+ 		this.gInputStream = gInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gInputStream = cast(GInputStream*)obj;
+Index: src/gio/InetSocketAddress.d
+===================================================================
+--- src/gio/InetSocketAddress.d	(revision 844)
++++ src/gio/InetSocketAddress.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gInetSocketAddress = gInetSocketAddress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gInetSocketAddress = cast(GInetSocketAddress*)obj;
+Index: src/gio/VolumeMonitor.d
+===================================================================
+--- src/gio/VolumeMonitor.d	(revision 844)
++++ src/gio/VolumeMonitor.d	(working copy)
+@@ -134,7 +134,7 @@
+ 		this.gVolumeMonitor = gVolumeMonitor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gVolumeMonitor = cast(GVolumeMonitor*)obj;
+Index: src/gio/FilterInputStream.d
+===================================================================
+--- src/gio/FilterInputStream.d	(revision 844)
++++ src/gio/FilterInputStream.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.gFilterInputStream = gFilterInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFilterInputStream = cast(GFilterInputStream*)obj;
+Index: src/gio/CharsetConverter.d
+===================================================================
+--- src/gio/CharsetConverter.d	(revision 844)
++++ src/gio/CharsetConverter.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gCharsetConverter = gCharsetConverter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gCharsetConverter = cast(GCharsetConverter*)obj;
+Index: src/gio/MountOperation.d
+===================================================================
+--- src/gio/MountOperation.d	(revision 844)
++++ src/gio/MountOperation.d	(working copy)
+@@ -124,7 +124,7 @@
+ 		this.gMountOperation = gMountOperation;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gMountOperation = cast(GMountOperation*)obj;
+Index: src/gio/Cancellable.d
+===================================================================
+--- src/gio/Cancellable.d	(revision 844)
++++ src/gio/Cancellable.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gCancellable = gCancellable;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gCancellable = cast(GCancellable*)obj;
+Index: src/gio/SimpleAsyncResult.d
+===================================================================
+--- src/gio/SimpleAsyncResult.d	(revision 844)
++++ src/gio/SimpleAsyncResult.d	(working copy)
+@@ -177,7 +177,7 @@
+ 		this.gSimpleAsyncResult = gSimpleAsyncResult;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSimpleAsyncResult = cast(GSimpleAsyncResult*)obj;
+Index: src/gio/FilenameCompleter.d
+===================================================================
+--- src/gio/FilenameCompleter.d	(revision 844)
++++ src/gio/FilenameCompleter.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gFilenameCompleter = gFilenameCompleter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFilenameCompleter = cast(GFilenameCompleter*)obj;
+Index: src/gio/SocketListener.d
+===================================================================
+--- src/gio/SocketListener.d	(revision 844)
++++ src/gio/SocketListener.d	(working copy)
+@@ -130,7 +130,7 @@
+ 		this.gSocketListener = gSocketListener;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketListener = cast(GSocketListener*)obj;
+Index: src/gio/SocketControlMessage.d
+===================================================================
+--- src/gio/SocketControlMessage.d	(revision 844)
++++ src/gio/SocketControlMessage.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gSocketControlMessage = gSocketControlMessage;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketControlMessage = cast(GSocketControlMessage*)obj;
+Index: src/gio/UnixSocketAddress.d
+===================================================================
+--- src/gio/UnixSocketAddress.d	(revision 844)
++++ src/gio/UnixSocketAddress.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.gUnixSocketAddress = gUnixSocketAddress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixSocketAddress = cast(GUnixSocketAddress*)obj;
+Index: src/gio/MemoryInputStream.d
+===================================================================
+--- src/gio/MemoryInputStream.d	(revision 844)
++++ src/gio/MemoryInputStream.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gMemoryInputStream = gMemoryInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gMemoryInputStream = cast(GMemoryInputStream*)obj;
+Index: src/gio/InetAddress.d
+===================================================================
+--- src/gio/InetAddress.d	(revision 844)
++++ src/gio/InetAddress.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gInetAddress = gInetAddress;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gInetAddress = cast(GInetAddress*)obj;
+Index: src/gio/TcpConnection.d
+===================================================================
+--- src/gio/TcpConnection.d	(revision 844)
++++ src/gio/TcpConnection.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gTcpConnection = gTcpConnection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gTcpConnection = cast(GTcpConnection*)obj;
+Index: src/gio/ThreadedSocketService.d
+===================================================================
+--- src/gio/ThreadedSocketService.d	(revision 844)
++++ src/gio/ThreadedSocketService.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gThreadedSocketService = gThreadedSocketService;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gThreadedSocketService = cast(GThreadedSocketService*)obj;
+Index: src/gio/OutputStream.d
+===================================================================
+--- src/gio/OutputStream.d	(revision 844)
++++ src/gio/OutputStream.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gOutputStream = gOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gOutputStream = cast(GOutputStream*)obj;
+Index: src/gio/FileOutputStream.d
+===================================================================
+--- src/gio/FileOutputStream.d	(revision 844)
++++ src/gio/FileOutputStream.d	(working copy)
+@@ -136,7 +136,7 @@
+ 		this.gFileOutputStream = gFileOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileOutputStream = cast(GFileOutputStream*)obj;
+Index: src/gio/IOModule.d
+===================================================================
+--- src/gio/IOModule.d	(revision 844)
++++ src/gio/IOModule.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gIOModule = gIOModule;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gIOModule = cast(GIOModule*)obj;
+Index: src/gio/UnixMountMonitor.d
+===================================================================
+--- src/gio/UnixMountMonitor.d	(revision 844)
++++ src/gio/UnixMountMonitor.d	(working copy)
+@@ -110,7 +110,7 @@
+ 		this.gUnixMountMonitor = gUnixMountMonitor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixMountMonitor = cast(GUnixMountMonitor*)obj;
+Index: src/gio/UnixInputStream.d
+===================================================================
+--- src/gio/UnixInputStream.d	(revision 844)
++++ src/gio/UnixInputStream.d	(working copy)
+@@ -110,7 +110,7 @@
+ 		this.gUnixInputStream = gUnixInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixInputStream = cast(GUnixInputStream*)obj;
+Index: src/gio/File.d
+===================================================================
+--- src/gio/File.d	(revision 844)
++++ src/gio/File.d	(working copy)
+@@ -212,7 +212,7 @@
+ 		this.gFile = gFile;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFile = cast(GFile*)obj;
+Index: src/gio/DesktopAppInfo.d
+===================================================================
+--- src/gio/DesktopAppInfo.d	(revision 844)
++++ src/gio/DesktopAppInfo.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gDesktopAppInfo = gDesktopAppInfo;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gDesktopAppInfo = cast(GDesktopAppInfo*)obj;
+Index: src/gio/Socket.d
+===================================================================
+--- src/gio/Socket.d	(revision 844)
++++ src/gio/Socket.d	(working copy)
+@@ -169,7 +169,7 @@
+ 		this.gSocket = gSocket;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocket = cast(GSocket*)obj;
+Index: src/gio/UnixConnection.d
+===================================================================
+--- src/gio/UnixConnection.d	(revision 844)
++++ src/gio/UnixConnection.d	(working copy)
+@@ -121,7 +121,7 @@
+ 		this.gUnixConnection = gUnixConnection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixConnection = cast(GUnixConnection*)obj;
+Index: src/gio/ZlibCompressor.d
+===================================================================
+--- src/gio/ZlibCompressor.d	(revision 844)
++++ src/gio/ZlibCompressor.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gZlibCompressor = gZlibCompressor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gZlibCompressor = cast(GZlibCompressor*)obj;
+Index: src/gio/BufferedInputStream.d
+===================================================================
+--- src/gio/BufferedInputStream.d	(revision 844)
++++ src/gio/BufferedInputStream.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gBufferedInputStream = gBufferedInputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gBufferedInputStream = cast(GBufferedInputStream*)obj;
+Index: src/gio/BufferedOutputStream.d
+===================================================================
+--- src/gio/BufferedOutputStream.d	(revision 844)
++++ src/gio/BufferedOutputStream.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gBufferedOutputStream = gBufferedOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gBufferedOutputStream = cast(GBufferedOutputStream*)obj;
+Index: src/gio/ThemedIcon.d
+===================================================================
+--- src/gio/ThemedIcon.d	(revision 844)
++++ src/gio/ThemedIcon.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gThemedIcon = gThemedIcon;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gThemedIcon = cast(GThemedIcon*)obj;
+Index: src/gio/UnixOutputStream.d
+===================================================================
+--- src/gio/UnixOutputStream.d	(revision 844)
++++ src/gio/UnixOutputStream.d	(working copy)
+@@ -110,7 +110,7 @@
+ 		this.gUnixOutputStream = gUnixOutputStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixOutputStream = cast(GUnixOutputStream*)obj;
+Index: src/gio/IOStream.d
+===================================================================
+--- src/gio/IOStream.d	(revision 844)
++++ src/gio/IOStream.d	(working copy)
+@@ -140,7 +140,7 @@
+ 		this.gIOStream = gIOStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gIOStream = cast(GIOStream*)obj;
+Index: src/gio/FileIOStream.d
+===================================================================
+--- src/gio/FileIOStream.d	(revision 844)
++++ src/gio/FileIOStream.d	(working copy)
+@@ -140,7 +140,7 @@
+ 		this.gFileIOStream = gFileIOStream;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileIOStream = cast(GFileIOStream*)obj;
+Index: src/gio/ZlibDecompressor.d
+===================================================================
+--- src/gio/ZlibDecompressor.d	(revision 844)
++++ src/gio/ZlibDecompressor.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gZlibDecompressor = gZlibDecompressor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gZlibDecompressor = cast(GZlibDecompressor*)obj;
+Index: src/gio/SocketClient.d
+===================================================================
+--- src/gio/SocketClient.d	(revision 844)
++++ src/gio/SocketClient.d	(working copy)
+@@ -133,7 +133,7 @@
+ 		this.gSocketClient = gSocketClient;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gSocketClient = cast(GSocketClient*)obj;
+Index: src/gio/UnixFDList.d
+===================================================================
+--- src/gio/UnixFDList.d	(revision 844)
++++ src/gio/UnixFDList.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gUnixFDList = gUnixFDList;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gUnixFDList = cast(GUnixFDList*)obj;
+Index: src/gio/FileInfo.d
+===================================================================
+--- src/gio/FileInfo.d	(revision 844)
++++ src/gio/FileInfo.d	(working copy)
+@@ -141,7 +141,7 @@
+ 		this.gFileInfo = gFileInfo;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gFileInfo = cast(GFileInfo*)obj;
+Index: srcsv/gsv/SourceLanguageManager.d
+===================================================================
+--- srcsv/gsv/SourceLanguageManager.d	(revision 844)
++++ srcsv/gsv/SourceLanguageManager.d	(working copy)
+@@ -119,7 +119,7 @@
+ 		this.gtkSourceLanguageManager = gtkSourceLanguageManager;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceLanguageManager = cast(GtkSourceLanguageManager*)obj;
+Index: srcsv/gsv/SourceCompletionContext.d
+===================================================================
+--- srcsv/gsv/SourceCompletionContext.d	(revision 844)
++++ srcsv/gsv/SourceCompletionContext.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gtkSourceCompletionContext = gtkSourceCompletionContext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceCompletionContext = cast(GtkSourceCompletionContext*)obj;
+Index: srcsv/gsv/SourceStyleSchemeManager.d
+===================================================================
+--- srcsv/gsv/SourceStyleSchemeManager.d	(revision 844)
++++ srcsv/gsv/SourceStyleSchemeManager.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gtkSourceStyleSchemeManager = gtkSourceStyleSchemeManager;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceStyleSchemeManager = cast(GtkSourceStyleSchemeManager*)obj;
+Index: srcsv/gsv/SourceLanguage.d
+===================================================================
+--- srcsv/gsv/SourceLanguage.d	(revision 844)
++++ srcsv/gsv/SourceLanguage.d	(working copy)
+@@ -110,7 +110,7 @@
+ 		this.gtkSourceLanguage = gtkSourceLanguage;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceLanguage = cast(GtkSourceLanguage*)obj;
+Index: srcsv/gsv/SourceStyleScheme.d
+===================================================================
+--- srcsv/gsv/SourceStyleScheme.d	(revision 844)
++++ srcsv/gsv/SourceStyleScheme.d	(working copy)
+@@ -116,7 +116,7 @@
+ 		this.gtkSourceStyleScheme = gtkSourceStyleScheme;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceStyleScheme = cast(GtkSourceStyleScheme*)obj;
+Index: srcsv/gsv/SourceCompletionInfo.d
+===================================================================
+--- srcsv/gsv/SourceCompletionInfo.d	(revision 844)
++++ srcsv/gsv/SourceCompletionInfo.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gtkSourceCompletionInfo = gtkSourceCompletionInfo;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceCompletionInfo = cast(GtkSourceCompletionInfo*)obj;
+Index: srcsv/gsv/SourceCompletionItem.d
+===================================================================
+--- srcsv/gsv/SourceCompletionItem.d	(revision 844)
++++ srcsv/gsv/SourceCompletionItem.d	(working copy)
+@@ -114,7 +114,7 @@
+ 		this.gtkSourceCompletionItem = gtkSourceCompletionItem;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceCompletionItem = cast(GtkSourceCompletionItem*)obj;
+Index: srcsv/gsv/SourceMark.d
+===================================================================
+--- srcsv/gsv/SourceMark.d	(revision 844)
++++ srcsv/gsv/SourceMark.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gtkSourceMark = gtkSourceMark;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceMark = cast(GtkSourceMark*)obj;
+Index: srcsv/gsv/SourceStyle.d
+===================================================================
+--- srcsv/gsv/SourceStyle.d	(revision 844)
++++ srcsv/gsv/SourceStyle.d	(working copy)
+@@ -107,7 +107,7 @@
+ 		this.gtkSourceStyle = gtkSourceStyle;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceStyle = cast(GtkSourceStyle*)obj;
+Index: srcsv/gsv/SourceBuffer.d
+===================================================================
+--- srcsv/gsv/SourceBuffer.d	(revision 844)
++++ srcsv/gsv/SourceBuffer.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gtkSourceBuffer = gtkSourceBuffer;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceBuffer = cast(GtkSourceBuffer*)obj;
+Index: srcsv/gsv/SourceCompletion.d
+===================================================================
+--- srcsv/gsv/SourceCompletion.d	(revision 844)
++++ srcsv/gsv/SourceCompletion.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkSourceCompletion = gtkSourceCompletion;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceCompletion = cast(GtkSourceCompletion*)obj;
+Index: srcsv/gsv/SourceGutter.d
+===================================================================
+--- srcsv/gsv/SourceGutter.d	(revision 844)
++++ srcsv/gsv/SourceGutter.d	(working copy)
+@@ -132,7 +132,7 @@
+ 		this.gtkSourceGutter = gtkSourceGutter;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceGutter = cast(GtkSourceGutter*)obj;
+Index: srcsv/gsv/SourceView.d
+===================================================================
+--- srcsv/gsv/SourceView.d	(revision 844)
++++ srcsv/gsv/SourceView.d	(working copy)
+@@ -128,7 +128,7 @@
+ 		this.gtkSourceView = gtkSourceView;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourceView = cast(GtkSourceView*)obj;
+Index: srcsv/gsv/SourcePrintCompositor.d
+===================================================================
+--- srcsv/gsv/SourcePrintCompositor.d	(revision 844)
++++ srcsv/gsv/SourcePrintCompositor.d	(working copy)
+@@ -126,7 +126,7 @@
+ 		this.gtkSourcePrintCompositor = gtkSourcePrintCompositor;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gtkSourcePrintCompositor = cast(GtkSourcePrintCompositor*)obj;
+Index: srcgstreamer/gstreamer/Plugin.d
+===================================================================
+--- srcgstreamer/gstreamer/Plugin.d	(revision 844)
++++ srcgstreamer/gstreamer/Plugin.d	(working copy)
+@@ -135,7 +135,7 @@
+ 		this.gstPlugin = gstPlugin;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstPlugin = cast(GstPlugin*)obj;
+Index: srcgstreamer/gstreamer/Task.d
+===================================================================
+--- srcgstreamer/gstreamer/Task.d	(revision 844)
++++ srcgstreamer/gstreamer/Task.d	(working copy)
+@@ -131,7 +131,7 @@
+ 		this.gstTask = gstTask;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstTask = cast(GstTask*)obj;
+Index: srcgstreamer/gstreamer/Pad.d
+===================================================================
+--- srcgstreamer/gstreamer/Pad.d	(revision 844)
++++ srcgstreamer/gstreamer/Pad.d	(working copy)
+@@ -161,7 +161,7 @@
+ 		this.gstPad = gstPad;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstPad = cast(GstPad*)obj;
+Index: srcgstreamer/gstreamer/Pipeline.d
+===================================================================
+--- srcgstreamer/gstreamer/Pipeline.d	(revision 844)
++++ srcgstreamer/gstreamer/Pipeline.d	(working copy)
+@@ -159,7 +159,7 @@
+ 		this.gstPipeline = gstPipeline;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstPipeline = cast(GstPipeline*)obj;
+Index: srcgstreamer/gstreamer/Bin.d
+===================================================================
+--- srcgstreamer/gstreamer/Bin.d	(revision 844)
++++ srcgstreamer/gstreamer/Bin.d	(working copy)
+@@ -200,7 +200,7 @@
+ 		this.gstBin = gstBin;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstBin = cast(GstBin*)obj;
+Index: srcgstreamer/gstreamer/GhostPad.d
+===================================================================
+--- srcgstreamer/gstreamer/GhostPad.d	(revision 844)
++++ srcgstreamer/gstreamer/GhostPad.d	(working copy)
+@@ -123,7 +123,7 @@
+ 		this.gstGhostPad = gstGhostPad;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstGhostPad = cast(GstGhostPad*)obj;
+Index: srcgstreamer/gstreamer/PluginFeature.d
+===================================================================
+--- srcgstreamer/gstreamer/PluginFeature.d	(revision 844)
++++ srcgstreamer/gstreamer/PluginFeature.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gstPluginFeature = gstPluginFeature;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstPluginFeature = cast(GstPluginFeature*)obj;
+Index: srcgstreamer/gstreamer/TypeFindFactory.d
+===================================================================
+--- srcgstreamer/gstreamer/TypeFindFactory.d	(revision 844)
++++ srcgstreamer/gstreamer/TypeFindFactory.d	(working copy)
+@@ -165,7 +165,7 @@
+ 		this.gstTypeFindFactory = gstTypeFindFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstTypeFindFactory = cast(GstTypeFindFactory*)obj;
+Index: srcgstreamer/gstreamer/ObjectGst.d
+===================================================================
+--- srcgstreamer/gstreamer/ObjectGst.d	(revision 844)
++++ srcgstreamer/gstreamer/ObjectGst.d	(working copy)
+@@ -164,7 +164,7 @@
+ 		this.gstObject = gstObject;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstObject = cast(GstObject*)obj;
+Index: srcgstreamer/gstreamer/Bus.d
+===================================================================
+--- srcgstreamer/gstreamer/Bus.d	(revision 844)
++++ srcgstreamer/gstreamer/Bus.d	(working copy)
+@@ -149,7 +149,7 @@
+ 		this.gstBus = gstBus;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstBus = cast(GstBus*)obj;
+Index: srcgstreamer/gstreamer/Clock.d
+===================================================================
+--- srcgstreamer/gstreamer/Clock.d	(revision 844)
++++ srcgstreamer/gstreamer/Clock.d	(working copy)
+@@ -168,7 +168,7 @@
+ 		this.gstClock = gstClock;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstClock = cast(GstClock*)obj;
+Index: srcgstreamer/gstreamer/IndexFactory.d
+===================================================================
+--- srcgstreamer/gstreamer/IndexFactory.d	(revision 844)
++++ srcgstreamer/gstreamer/IndexFactory.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gstIndexFactory = gstIndexFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstIndexFactory = cast(GstIndexFactory*)obj;
+Index: srcgstreamer/gstreamer/SystemClock.d
+===================================================================
+--- srcgstreamer/gstreamer/SystemClock.d	(revision 844)
++++ srcgstreamer/gstreamer/SystemClock.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gstSystemClock = gstSystemClock;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstSystemClock = cast(GstSystemClock*)obj;
+Index: srcgstreamer/gstreamer/PadTemplate.d
+===================================================================
+--- srcgstreamer/gstreamer/PadTemplate.d	(revision 844)
++++ srcgstreamer/gstreamer/PadTemplate.d	(working copy)
+@@ -167,7 +167,7 @@
+ 		this.gstPadTemplate = gstPadTemplate;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstPadTemplate = cast(GstPadTemplate*)obj;
+Index: srcgstreamer/gstreamer/Index.d
+===================================================================
+--- srcgstreamer/gstreamer/Index.d	(revision 844)
++++ srcgstreamer/gstreamer/Index.d	(working copy)
+@@ -115,7 +115,7 @@
+ 		this.gstIndex = gstIndex;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstIndex = cast(GstIndex*)obj;
+Index: srcgstreamer/gstreamer/Registry.d
+===================================================================
+--- srcgstreamer/gstreamer/Registry.d	(revision 844)
++++ srcgstreamer/gstreamer/Registry.d	(working copy)
+@@ -160,7 +160,7 @@
+ 		this.gstRegistry = gstRegistry;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstRegistry = cast(GstRegistry*)obj;
+Index: srcgstreamer/gstreamer/ElementFactory.d
+===================================================================
+--- srcgstreamer/gstreamer/ElementFactory.d	(revision 844)
++++ srcgstreamer/gstreamer/ElementFactory.d	(working copy)
+@@ -139,7 +139,7 @@
+ 		this.gstElementFactory = gstElementFactory;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstElementFactory = cast(GstElementFactory*)obj;
+Index: srcgstreamer/gstreamer/Element.d
+===================================================================
+--- srcgstreamer/gstreamer/Element.d	(revision 844)
++++ srcgstreamer/gstreamer/Element.d	(working copy)
+@@ -184,7 +184,7 @@
+ 		this.gstElement = gstElement;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gstElement = cast(GstElement*)obj;
+Index: srcgda/gda/DataModelHash.d
+===================================================================
+--- srcgda/gda/DataModelHash.d	(revision 844)
++++ srcgda/gda/DataModelHash.d	(working copy)
+@@ -117,7 +117,7 @@
+ 		this.gdaDataModelHash = gdaDataModelHash;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaDataModelHash = cast(GdaDataModelHash*)obj;
+Index: srcgda/gda/Connection.d
+===================================================================
+--- srcgda/gda/Connection.d	(revision 844)
++++ srcgda/gda/Connection.d	(working copy)
+@@ -139,7 +139,7 @@
+ 		this.gdaConnection = gdaConnection;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaConnection = cast(GdaConnection*)obj;
+Index: srcgda/gda/ErrorGda.d
+===================================================================
+--- srcgda/gda/ErrorGda.d	(revision 844)
++++ srcgda/gda/ErrorGda.d	(working copy)
+@@ -109,7 +109,7 @@
+ 		this.gdaError = gdaError;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaError = cast(GdaError*)obj;
+Index: srcgda/gda/Client.d
+===================================================================
+--- srcgda/gda/Client.d	(revision 844)
++++ srcgda/gda/Client.d	(working copy)
+@@ -130,7 +130,7 @@
+ 		this.gdaClient = gdaClient;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaClient = cast(GdaClient*)obj;
+Index: srcgda/gda/Select.d
+===================================================================
+--- srcgda/gda/Select.d	(revision 844)
++++ srcgda/gda/Select.d	(working copy)
+@@ -110,7 +110,7 @@
+ 		this.gdaSelect = gdaSelect;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaSelect = cast(GdaSelect*)obj;
+Index: srcgda/gda/Export.d
+===================================================================
+--- srcgda/gda/Export.d	(revision 844)
++++ srcgda/gda/Export.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gdaExport = gdaExport;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaExport = cast(GdaExport*)obj;
+Index: srcgda/gda/Transaction.d
+===================================================================
+--- srcgda/gda/Transaction.d	(revision 844)
++++ srcgda/gda/Transaction.d	(working copy)
+@@ -106,7 +106,7 @@
+ 		this.gdaTransaction = gdaTransaction;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaTransaction = cast(GdaTransaction*)obj;
+Index: srcgda/gda/DataModelList.d
+===================================================================
+--- srcgda/gda/DataModelList.d	(revision 844)
++++ srcgda/gda/DataModelList.d	(working copy)
+@@ -113,7 +113,7 @@
+ 		this.gdaDataModelList = gdaDataModelList;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaDataModelList = cast(GdaDataModelList*)obj;
+Index: srcgda/gda/Table.d
+===================================================================
+--- srcgda/gda/Table.d	(revision 844)
++++ srcgda/gda/Table.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gdaTable = gdaTable;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaTable = cast(GdaTable*)obj;
+Index: srcgda/gda/DataModelArray.d
+===================================================================
+--- srcgda/gda/DataModelArray.d	(revision 844)
++++ srcgda/gda/DataModelArray.d	(working copy)
+@@ -104,7 +104,7 @@
+ 		this.gdaDataModelArray = gdaDataModelArray;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaDataModelArray = cast(GdaDataModelArray*)obj;
+Index: srcgda/gda/DataModel.d
+===================================================================
+--- srcgda/gda/DataModel.d	(revision 844)
++++ srcgda/gda/DataModel.d	(working copy)
+@@ -118,7 +118,7 @@
+ 		this.gdaDataModel = gdaDataModel;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdaDataModel = cast(GdaDataModel*)obj;
+Index: wrap/utils/GtkDClass.d
+===================================================================
+--- wrap/utils/GtkDClass.d	(revision 844)
++++ wrap/utils/GtkDClass.d	(working copy)
+@@ -650,7 +650,7 @@
+ 								&& gtkDParentName != "Surface" )
+ 							{
+ 								text ~= "";
+-								text ~= "protected void setStruct(GObject* obj)";
++								text ~= "protected override void setStruct(GObject* obj)";
+ 								text ~= "{";
+ 								text ~= "	super.setStruct(obj);";
+ 								text ~= "	"~var~" = cast("~gtkStruct~"*)obj;";
+Index: srcgl/glgdk/GLPixmap.d
+===================================================================
+--- srcgl/glgdk/GLPixmap.d	(revision 844)
++++ srcgl/glgdk/GLPixmap.d	(working copy)
+@@ -112,7 +112,7 @@
+ 		this.gdkGLPixmap = gdkGLPixmap;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkGLPixmap = cast(GdkGLPixmap*)obj;
+Index: srcgl/glgdk/GLContext.d
+===================================================================
+--- srcgl/glgdk/GLContext.d	(revision 844)
++++ srcgl/glgdk/GLContext.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gdkGLContext = gdkGLContext;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkGLContext = cast(GdkGLContext*)obj;
+Index: srcgl/glgdk/GLConfig.d
+===================================================================
+--- srcgl/glgdk/GLConfig.d	(revision 844)
++++ srcgl/glgdk/GLConfig.d	(working copy)
+@@ -122,7 +122,7 @@
+ 		this.gdkGLConfig = gdkGLConfig;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkGLConfig = cast(GdkGLConfig*)obj;
+Index: srcgl/glgdk/GLWindow.d
+===================================================================
+--- srcgl/glgdk/GLWindow.d	(revision 844)
++++ srcgl/glgdk/GLWindow.d	(working copy)
+@@ -111,7 +111,7 @@
+ 		this.gdkGLWindow = gdkGLWindow;
+ 	}
+ 	
+-	protected void setStruct(GObject* obj)
++	protected override void setStruct(GObject* obj)
+ 	{
+ 		super.setStruct(obj);
+ 		gdkGLWindow = cast(GdkGLWindow*)obj;

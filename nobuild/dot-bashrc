@@ -1,0 +1,119 @@
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+alias ls='ls --color=auto'
+PS1='[\u@\h \W]\$ '
+
+# Generate new tags file
+# ctags --list-kinds=c
+#   --c-kinds=+px-d -> prototypes and external variable declarations to the default set of tag kinds, but exclude macros
+# cscope
+#  -b  -> build the cross-reference only, ie don't run CLI
+#  -i- -> file list given on stdin
+retags () {
+    find . -regextype posix-awk -type f -regex ".*\.(h|c|cc|cpp)" | ctags -L- --extra=+f --c-kinds=+pxdm -f TAGS ;
+    find . -regextype posix-awk -type f -regex ".*\.(h|c|cc|cpp)" | cscope -b -i- ;
+}
+
+# Support for setting the title of the terminal tab
+function title() {
+    unset PROMPT_COMMAND
+    echo -ne "\033]0;$1\007"
+}
+
+function real_loc() {
+    find $* \( \
+        -name \*.d -o \
+        -name \*.h -o -name \*.cxx -o -name \*.C -o \
+        -name \*.c -o -name \*.cc -o -name \*.idl -o \
+        -name \*.cpp -o -name \*.java -o -name \*.ipc -o \
+        -name \*.hpp \
+    \) \
+    -print0 | xargs --null cat | grep -v "^$" | wc -l
+}
+
+function loc() {
+    if [ $# -eq 0 ]; then
+        real_loc "."
+    else
+        real_loc $*
+    fi
+}
+
+# Output a copy of $1 with duplicates removed
+# Note: subsequent copies are removed, otherwise order is preserved.
+# 1. the path to remove duplicates from
+function remove_duplicates() {
+    local original="${1}"
+    local IFS=':'
+    local result=""
+    for item in ${original}; do
+        if [ -z "$item" ]; then
+            continue
+        fi
+        local -i found_existing=0
+        for existing in ${result}; do
+            if [ "${item}" == "${existing}" ]; then
+                found_existing=1
+                break 1
+            fi
+        done
+        if [ ${found_existing} -eq 0 ]; then
+            result="${result:+${result}:}${item}"
+        fi
+    done
+    echo "${result}"
+}
+
+# Support for local perl modules
+export PERL_LOCAL_LIB_ROOT="${HOME}/local";
+export PERL_MB_OPT="--install_base ${HOME}/local";
+export PERL_MM_OPT="INSTALL_BASE=${HOME}/local";
+export PERL5LIB="${HOME}/local/lib/perl5/x86_64-linux-gnu-thread-multi:${HOME}/local/lib/perl5";
+
+# Support for local python modules
+export PYTHONPATH="${HOME}/local/lib/python3.2/site-packages:/usr/lib/python3.2/site-packages"
+
+# Support for local binaries
+PATH=${HOME}/local/bin:${PATH}
+
+# Support for dmd compiler
+PATH="${HOME}/source/d/dmd/bin64:${PATH}"
+
+export GREP_OPTIONS="--color"
+export EDITOR="vim"
+export PAGER="less"
+
+alias cp="cp -i"
+alias mv="mv -i"
+alias grep='grep --color=auto'
+
+HISTIGNORE="&:ls:[bf]g:exit"
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=erasedups:ignorespace
+shopt -s cmdhist
+#shopt -s emacs
+shopt -s histappend
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+stty -ixon          # disable flow control so CTRL-s works in bash history
+
+# https://bbs.archlinux.org/viewtopic.php?id=50885
+#PS1='\[\e[1;35m\]\u\[\e[m\] \[\e[1;34m\]\W\[\e[m\] \[\e[1;31m\]> \[\e[0m\]'
+PS1='\n\[\033[0;32m\]\u@\h \[\033[1;33m\]\w\n\[\033[0m\]> '
+#PS1='\[\033[1;31m\]\W/\[\033[0m\] '
+#PS1='[\[\033[1;36m\]\u\[\033[0m\]@\h \W]\$ '
+#PS1='\[\e[0;36m\]\h\[\e[m\]-\[\e[0;37m\]\u\[\e[m\]\[\e[0;37m\] \w:\n> '
+
+PS2='\\ '
+
+#echo "some unicode: ? ? ? ? ? ? "
+#echo "URL: http://slashdot.org/"

@@ -1,0 +1,95 @@
+! scrollbar style - rxvt (default), plain (most compact), next, or xterm
+URxvt.scrollstyle:          plain
+URxvt.secondaryScroll:      true
+URxvt*scrollBar_right:      true
+
+!URxvt.font:                 xft:Source Code Pro:size=10
+!URxvt.boldFont:             xft:Source Sans Pro:size=10
+!URxvt.italicFont:           xft:Source Sans Pro:size=10
+!URxvt.boldItalicFont:       xft:Source Sans Pro:size=10
+
+URxvt.font:                 xft:inconsolata:size=12
+!URxvt.boldFont:             xft:inconsolata:bold:size=12
+!URxvt.italicFont:           xft:inconsolata:bold:size=12
+!URxvt.boldItalicFont:       xft:inconsolata:bold:size=12
+
+!URxvt.font:                 xft:mensch:size=10
+!URxvt.boldFont:             xft:mensch:bold:size=10
+!URxvt.font:                 xft:DejaVu Sans Mono:pixelsize=15:antialias=true:hinting=true
+!URxvt*boldFont:             xft:DejaVu Sans Mono:bold:pixelsize=15:antialias=true:hinting=true
+!URxvt*font:                 xft:Bitstream Vera Sans Mono:pixelsize=14:antialias=true:hinting=true
+!URxvt*boldFont:             xft:Bitstream Vera Sans Mono:bold:pixelsize=14:antialias=true:hinting=true
+!URxvt*font:                 xft:Liberation Mono:pixelsize=13:antialias=true:hinting=true
+!URxvt*boldFont:             xft:Liberation Mono:bold:pixelsize=13:antialias=true:hinting=true
+!URxvt*font:                 xft:terminus:pixelsize=15
+!URxvt*boldFont:             xft:terminus:bold:pixelsize=15
+!URxvt*font:                 -*-courier-medium-r-normal-*-14-*-*-*-*-*-iso8859-1
+!URxvt*boldFont:             -*-courier-bold-r-normal-*-14-*-*-*-*-*-iso8859-1
+
+!URxvt.termName:             screen-256color
+
+URxvt.saveLines:            8192
+URxvt.geometry:             80x50
+URxvt.visualBell:           true
+
+URxvt.cutchars:             "()*,<>[]{}|:"
+
+URxvt.pointerBlank:         true
+URxvt.pointerBlankDelay:    1
+
+! Underline cursor (instead of solid)
+URxvt.cursorUnderline:      false
+
+URxvt.perl-ext-common:      default,matcher
+URxvt.urlLauncher:          firefox
+URxvt.matcher.button:       3
+
+URxvt.internalBorder:       1
+URxvt.externalBorder:       0
+
+!URxvt.perl-ext-common:      default,tabbed
+
+!URxvt.depth: 32
+!URxvt.transparent: true
+! URxvt.shading: 0 to 99 darkens, 101 to 200 lightens
+!URxvt.shading: 170
+
+URxvt.pointerColor:         #000000
+URxvt.pointerColor2:        #aaaaaa
+! cursor background
+URxvt.cursorColor:          #ff55ff
+! cursor foreground (ie, color of text behind cursor)
+URxvt.cursorColor2:         #000000
+! foreground during inverted selection (vim visual select) !!!!!!!  URxvt.throughColor:         #ff2222
+! background during non-inverted selection (mouse selection)
+URxvt.highlightColor:       #333333
+! foreground during non-inverted selection (mouse selection)
+!URxvt.highlightTextColor:   #ff0000
+! underline
+URxvt.underlineColor:       #ffff00
+! default background
+URxvt.background:           #0e0e18
+! default text
+URxvt.foreground:           #ffffee
+URxvt.color0:               #000000
+URxvt.color1:               #dc74d1
+URxvt.color2:               #0eb8c7
+URxvt.color3:               #dfe37e
+URxvt.color4:               Cyan3
+URxvt.color5:               #9e88f0
+URxvt.color6:               #73f7ff
+URxvt.color7:               #e1dddd
+URxvt.color8:               #8b8f93
+URxvt.color9:               #dc74d1
+URxvt.color10:              #0eb8c7
+URxvt.color11:              #dfe37e
+! ls directory
+URxvt.color12:              #3333ff
+URxvt.color13:              #9e88f0
+URxvt.color14:              #73f7ff
+URxvt.color15:              #e1dddd
+! Can also do colorBD and colorUL
+
+URxvt.scrollColor:          #999999
+URxvt.borderColor:          #222222
+!URxvt.troughColor:          #ff0000

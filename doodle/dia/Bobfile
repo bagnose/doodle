@@ -1,0 +1,3 @@
+refer doodle/core doodle/tk ;
+
+static-lib dia : grid_layer.d icanvas.d layer_stack.d page_layer.d standard_tools.d tool.d tool_layer.d;
