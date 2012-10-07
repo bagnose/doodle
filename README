@@ -1,62 +1,80 @@
-Doodle - a simple diagramming tool
+Doodle - a simple diagramming tool written in D using GtkD toolkit.
 
-Author: David Bryant, bagnose@gmail.com
+Author: David Bryant <bagnose@gmail.com>
 
-Build instructions (approximately):
+Build instructions (approximately - adjust for your local setup):
 
-1. Clone and build no-more-make: https://github.com/GrahamStJack/no-more-make
-   Put executables bob and bob-config somewhere in your path.
+1.  Clone and build no-more-make: https://github.com/GrahamStJack/no-more-make
+    Put executables bob and bob-config somewhere in your path.
 
-    cd ${HOME}/source/d
-    git clone https://github.com/GrahamStJack/no-more-make.git
-    cd no-more-make
-    ./build_with_dmd.sh
-    cp bob bob-config ${HOME}/local/bin
+        cd ${HOME}/source/d
+        git clone https://github.com/GrahamStJack/no-more-make.git
+        cd no-more-make
+        ./build_with_dmd.sh
+        cp bob bob-config ${HOME}/local/bin
 
-2. Download and build GtkD: https://github.com/gtkd-developers/GtkD/downloads
+2.  Download and build GtkD (2 options here):
 
-    cd ${HOME}/source/d
-    wget https://github.com/downloads/gtkd-developers/GtkD/GtkD-2.0.zip
-    mkdir GtkD-2.0 ; cd GtkD-2.0
-    unzip ../GtkD-2.0.zip
-    make
+        Official release (https://github.com/gtkd-developers/GtkD/downloads):
 
-3. Inside doodle repo, adjust "gtk" symlink to point to GtkD on your system
+            cd ${HOME}/source/d
+            wget https://github.com/downloads/gtkd-developers/GtkD/GtkD-2.0.zip
+            mkdir GtkD-2.0 ; cd GtkD-2.0
+            unzip ../GtkD-2.0.zip
+            make
 
-    cd ${HOME}/source/doodle
-    ln -sf ../GtkD-2.0 gtk
+        Or git (https://github.com/gtkd-developers/GtkD):
 
-4. Configure doodle build directory:
+            cd ${HOME}/source/d
+            git clone https://github.com/gtkd-developers/GtkD.git GtkD.git
+            cd GtkD.git
+            make
 
-    bob-config --mode=debug ${HOME}/build/doodle/debug
+3.  Configure doodle build directory:
 
-5. Build doodle:
+        bob-config --mode=debug ${HOME}/build/doodle/debug
 
-    cd ${HOME}/build/doodle/debug
-    bob
+4.  Setup symlink to GtkD
 
-6. Run doodle:
+        cd ${HOME}/build/doodle/debug/src
+        #ln -s ${HOME}/source/d/GtkD.git gtk
+        ln -s ${HOME}/source/d/GtkD-2.0 gtk
 
-    ./run dist/bin/doodle
+4.  Build doodle:
 
+        cd ${HOME}/build/doodle/debug
+        bob
 
+6.  Run doodle:
+
+        ./run dist/bin/doodle
 
 
 Other info:
+
+    Building within vim:
+
+        set makeprg=bob
+        :make
 
     ctags with D support:
 
         wget http://prdownloads.sourceforge.net/ctags/ctags-5.8.tar.gz
         tar zxvf ctags-5.8.tar.gz
         cd ctags-5.8
-        patch < ~/source/d/doodle.git/nobuild/ctags.patch
+        patch < ${HOME}/source/d/doodle.git/nobuild/ctags.patch
         ./configure --prefix=${HOME}/local
         make && make install
 
         cd ${HOME}/build/doodle/debug
         find -L src -name \*.d | ctags -L- --extra=+f -f TAGS ;
 
-    Building within vim:
+    docutils with plantuml support:
 
-        set makeprg=bob
-        :make
+        svn checkout \
+           http://docutils.svn.sourceforge.net/svnroot/docutils/trunk/docutils \
+           docutils-plantuml-patched.svn
+        cd docutils-plantuml-patched.svn
+        patch -p0 < ${HOME}/source/d/doodle.git/nobuild/docutils-plantuml.patch
+        ./setup.py build
+        ./setup.py install --prefix=${HOME}/local
