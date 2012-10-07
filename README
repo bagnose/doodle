@@ -69,6 +69,12 @@ Other info:
         cd ${HOME}/build/doodle/debug
         find -L src -name \*.d | ctags -L- --extra=+f -f TAGS ;
 
+    Make the TAGS:
+
+        cd ${HOME}/build/doodle/debug
+        ${HOME}/source/d/doodle.git/nobuild/make-tags.sh
+        # find -L src -name \*.d | ctags -L- --extra=+f -f TAGS ;
+
     docutils with plantuml support:
 
         svn checkout \
