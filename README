@@ -4,13 +4,13 @@ Author: David Bryant <bagnose@gmail.com>
 
 Build instructions (approximately - adjust for your local setup):
 
-1.  Clone and build no-more-make: https://github.com/GrahamStJack/no-more-make
+1.  Clone and build bob: https://github.com/GrahamStJack/bob
     Put executables bob and bob-config somewhere in your path.
 
         cd ${HOME}/source/d
-        git clone https://github.com/GrahamStJack/no-more-make.git
-        cd no-more-make
-        ./build_with_dmd.sh
+        git clone https://github.com/GrahamStJack/bob.git bob.git
+        cd bob.git
+        ./build_with_dmd.sh         # XXX tries build directly into ~/bin
         cp bob bob-config ${HOME}/local/bin
 
 2.  Download and build GtkD (2 options here):
@@ -30,15 +30,24 @@ Build instructions (approximately - adjust for your local setup):
             cd GtkD.git
             make
 
-3.  Configure doodle build directory:
+3.  Clone doodle and establish build directory: https://github.com/bagnose/doodle
 
+        cd ${HOME}/source/d
+        git clone https://github.com/bagnose/doodle.git doodle.git
+        cd doodle.git
         bob-config --mode=debug ${HOME}/build/doodle/debug
 
-4.  Setup symlink to GtkD
+4.  Adjust doodle build directory symlink to GtkD
 
         cd ${HOME}/build/doodle/debug/src
-        #ln -s ${HOME}/source/d/GtkD.git gtk
-        ln -s ${HOME}/source/d/GtkD-2.0 gtk
+
+        Official release:
+
+            ln -s ${HOME}/source/d/GtkD-2.0 gtk
+
+        Or git:
+
+            ln -s ${HOME}/source/d/GtkD.git gtk
 
 4.  Build doodle:
 
