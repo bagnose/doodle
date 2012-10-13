@@ -102,8 +102,7 @@ void findDuplicates(in string[] dirs,
         }
 
         Hash hash = md5.finish();
-        //writefln(" %s", toHexString(hash));
-        writefln(" %s", hash);
+        writefln(" %s", toHexString(hash));
         return hash;
     }
 
@@ -237,11 +236,11 @@ void findDuplicates(in string[] dirs,
                                     if (dirCount > 0) {
                                         string dir = upDir(fileInfo.name, dirCount);
                                         writefln(" ** Removing directory: %s", dir);
-                                        //rmdirRecurse(dir);
+                                        rmdirRecurse(dir);
                                     }
                                     else {
                                         writefln(" ** Removing file: %s", fileInfo.name);
-                                        //remove(fileInfo.name);
+                                        remove(fileInfo.name);
                                     }
                                 }
                                 catch (Exception ex) {
