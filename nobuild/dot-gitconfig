@@ -1,0 +1,46 @@
+[user]
+    name  = bagnose
+    email = bagnose@gmail.com
+
+[github]
+    user = bagnose
+
+[color]
+    ui = true
+
+[core]
+    editor = vim
+    whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+
+[web]
+    browser = firefox
+
+[color]
+    ui = true
+
+[color "branch"]
+    current = yellow bold
+    local = green bold
+    remote = cyan bold
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+    whitespace = red reverse
+
+[color "status"]
+    added = green bold
+    changed = yellow bold
+    untracked = red bold
+
+[credential]
+    helper = cache --timeout=3600
+
+[merge]
+    tool = vimdiff
+
+
+[apply]
+    whitespace = error-all

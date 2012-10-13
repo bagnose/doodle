@@ -1,17 +1,36 @@
+!for gitk (alt, classic, default, clam)
+*TkTheme: alt
+
+! redglass/whiteglass (/usr/share/icons?)
+Xcursor.theme: whiteglass
+Xcursor.size: 24
+
+!Xft.dpi:                      121
+!Xft.antialias:                 true
+!Xft.hinting:                   true
+!Xft.hintstyle:                 hintfull
+!Xft.rgba:                      rgb
+
 ! scrollbar style - rxvt (default), plain (most compact), next, or xterm
 URxvt.scrollstyle:          plain
 URxvt.secondaryScroll:      true
-URxvt*scrollBar_right:      true
+URxvt.scrollBar_right:      true
+!URxvt.scrollBar_floating:   true
+URxvt.thickness:            8
+
+URxvt.secondaryScreen:      true
 
 !URxvt.font:                 xft:Source Code Pro:size=10
 !URxvt.boldFont:             xft:Source Sans Pro:size=10
 !URxvt.italicFont:           xft:Source Sans Pro:size=10
 !URxvt.boldItalicFont:       xft:Source Sans Pro:size=10
 
-URxvt.font:                 xft:inconsolata:size=12
+URxvt.geometry:             80x47
+URxvt.font:                 xft:inconsolata:size=12,xft:Code2000:size=12,xft:Code2001:size=12
+!URxvt.font:                 xft:inconsolata:size=14,xft:Code2000:size=14,xft:Code2001:size=14
 !URxvt.boldFont:             xft:inconsolata:bold:size=12
-!URxvt.italicFont:           xft:inconsolata:bold:size=12
-!URxvt.boldItalicFont:       xft:inconsolata:bold:size=12
+!URxvt.italicFont:           xft:inconsolata:italic:size=12
+!URxvt.boldItalicFont:       xft:inconsolata:italic,bold:size=12
 
 !URxvt.font:                 xft:mensch:size=10
 !URxvt.boldFont:             xft:mensch:bold:size=10
@@ -29,7 +48,6 @@ URxvt.font:                 xft:inconsolata:size=12
 !URxvt.termName:             screen-256color
 
 URxvt.saveLines:            8192
-URxvt.geometry:             80x50
 URxvt.visualBell:           true
 
 URxvt.cutchars:             "()*,<>[]{}|:"
@@ -40,7 +58,7 @@ URxvt.pointerBlankDelay:    1
 ! Underline cursor (instead of solid)
 URxvt.cursorUnderline:      false
 
-URxvt.perl-ext-common:      default,matcher
+URxvt.perl-ext-common:      default,matcher,tabbed
 URxvt.urlLauncher:          firefox
 URxvt.matcher.button:       3
 
@@ -54,13 +72,16 @@ URxvt.externalBorder:       0
 ! URxvt.shading: 0 to 99 darkens, 101 to 200 lightens
 !URxvt.shading: 170
 
+! pointer foreground (interior of pointer)
 URxvt.pointerColor:         #000000
+! pointer background (ie, outline of pointer)
 URxvt.pointerColor2:        #aaaaaa
-! cursor background
+! cursor color (solid bit)
 URxvt.cursorColor:          #ff55ff
-! cursor foreground (ie, color of text behind cursor)
+! cursor text
 URxvt.cursorColor2:         #000000
-! foreground during inverted selection (vim visual select) !!!!!!!  URxvt.throughColor:         #ff2222
+! foreground during inverted selection (vim visual select) !!!!!!!  (I dont think this resource exists)
+URxvt.throughColor:         #ff0000
 ! background during non-inverted selection (mouse selection)
 URxvt.highlightColor:       #333333
 ! foreground during non-inverted selection (mouse selection)
@@ -68,17 +89,20 @@ URxvt.highlightColor:       #333333
 ! underline
 URxvt.underlineColor:       #ffff00
 ! default background
-URxvt.background:           #0e0e18
+URxvt.background:           #101020
 ! default text
 URxvt.foreground:           #ffffee
-URxvt.color0:               #000000
-URxvt.color1:               #dc74d1
+!! colors 0-7 are 'low-intensity'
+! (default: black)
+URxvt.color0:               #404040
+URxvt.color1:               #ff0000
 URxvt.color2:               #0eb8c7
 URxvt.color3:               #dfe37e
-URxvt.color4:               Cyan3
+URxvt.color4:               #00ffff
 URxvt.color5:               #9e88f0
 URxvt.color6:               #73f7ff
 URxvt.color7:               #e1dddd
+!! colors 8-15 are 'high-intensity'
 URxvt.color8:               #8b8f93
 URxvt.color9:               #dc74d1
 URxvt.color10:              #0eb8c7
@@ -88,8 +112,21 @@ URxvt.color12:              #3333ff
 URxvt.color13:              #9e88f0
 URxvt.color14:              #73f7ff
 URxvt.color15:              #e1dddd
-! Can also do colorBD and colorUL
 
 URxvt.scrollColor:          #999999
 URxvt.borderColor:          #222222
-!URxvt.troughColor:          #ff0000
+!!! troughColor doesnt affect 'plain' scrollstyle
+URxvt.troughColor:          #ff0000
+
+URxvt.tabbed.tabbar-fg: 2
+URxvt.tabbed.tabbar-bg: 0
+URxvt.tabbed.tab-fg:    3
+URxvt.tabbed.tab-bg:    0
+
+!URxvt.colorIT
+!URxvt.colorBD
+!URxvt.colorUL
+!URxvt.fadeColor
+!URxvt.tintColor
+
+URxvt.fading:  20
