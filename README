@@ -43,11 +43,11 @@ Build instructions (approximately - adjust for your local setup):
 
         Official release:
 
-            ln -s ${HOME}/source/d/GtkD-2.0 gtk
+            ln -s ${HOME}/source/d/GtkD-2.0 GtkD
 
         Or git:
 
-            ln -s ${HOME}/source/d/GtkD.git gtk
+            ln -s ${HOME}/source/d/GtkD.git GtkD
 
 4.  Build doodle:
 
