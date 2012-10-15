@@ -88,7 +88,7 @@ void findDuplicates(in string[] dirs,
         MD5 md5;
         ulong byteCount = 0;
 
-        foreach (ubyte[] buffer; chunks(file, 1024 * 4096)) {
+        foreach (buffer; file.byChunk(1024 * 4096)) {
             write("#");
             stdout.flush();
             if (maxBytes != 0 && byteCount + buffer.length >= maxBytes) {
@@ -114,7 +114,7 @@ void findDuplicates(in string[] dirs,
     static void accumulateFileInfo(in string dir, in ulong minFileSize, ref FileInfo[] fileArray) {
         try {
             //writefln("Dir: %s", dir);
-            foreach (string entry; dirEntries(dir, SpanMode.shallow, false)) {
+            foreach (entry; dirEntries(dir, SpanMode.shallow, false)) {
                 if (isSymlink(entry)) {
                     continue;
                 }
@@ -143,7 +143,7 @@ void findDuplicates(in string[] dirs,
 
     writefln("Accumulating file list");
 
-    foreach (string dir; dirs) {
+    foreach (dir; dirs) {
         accumulateFileInfo(dir, minFileSize, fileArray);
     }
     writeln();

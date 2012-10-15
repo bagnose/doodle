@@ -1,2 +1,2 @@
-#contain core tk dia fig gtk main ;
-contain main ;
+contain core tk dia fig gtk main ;
+#contain main ;
