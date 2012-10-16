@@ -27,7 +27,7 @@ struct ByteAccumulator(size_t hashSize) {
     private {
         File    _file;
         Hash    _hash;
-        bool    _ongoing;
+        bool    _ongoing = true;
     }
 }
 
@@ -54,11 +54,39 @@ struct MD5Accumulator {
         MD5     _md5;
         ubyte[] _buffer;
         Hash    _hash;
-        bool    _ongoing;
+        bool    _ongoing = true;
+    }
+}
+
+void test(Accumulator)(in string[] paths) {
+    Accumulator * [string] accumulators;
+
+    foreach (path; paths) {
+        accumulators[path] = new Accumulator(path);
+    }
+
+    for (;;) {
+        bool ongoing = false;
+
+        foreach (path, ac; accumulators) {
+            if (ac.ongoing) {
+                ongoing = true;
+
+                ac.accumulate();
+                writefln(" %s: %s", path, toHexString(ac.hash));
+            }
+        }
+
+        if (!ongoing) {
+            break;
+        }
     }
 }
 
 int main(string[] args) {
+    test!(MD5Accumulator)(args[1 .. $]);
+
+    /+
     foreach (path; args[1 .. $]) {
         //auto ha = MD5Accumulator(path, 16);
         auto ha = ByteAccumulator!(16)(path);
@@ -67,5 +95,6 @@ int main(string[] args) {
             writefln(" %s", toHexString(ha.hash));
         } while (ha.ongoing);
     }
+    +/
     return 0;
 }
