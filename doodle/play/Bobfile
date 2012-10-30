@@ -1,0 +1,9 @@
+dist-exe dupes : dupes.d : ;
+
+dist-exe play : play.d : ;
+
+dist-exe audio-file-renamer : audio_file_renamer.d : ;
+
+dist-exe audio-file-retagger : audio_file_retagger.d : ;
+
+dist-exe chess : chess.d : ;

@@ -1,9 +1,3 @@
 refer doodle/core doodle/dia doodle/fig doodle/gtk ;
 
-dist-exe chess : chess.d : ;
-
-dist-exe dupes : dupes.d : ;
-
-dist-exe play : play.d : ;
-
 dist-exe doodle : doodle.d : dl gtkd ;
