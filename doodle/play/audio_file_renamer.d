@@ -22,9 +22,14 @@ Result checkPath(in string path, out string fixedPath) {
             return Result.goodMusic;
         }
 
-        // The contract here is that the jjjjj
+        // Pattern deal: first capture = track number, second capture = title
+        // Note, order is important to avoid false matches
         string[] patterns =
             [
+            // XXX
+            format(r"^.*\s([0-9]{2}) - (\S.*)\s*\.%s$", ext),
+            // Tom Waits - Blue Valentine (1978) [flac]/03 -  Christmas Card From a Hooker in Minneapolis.flac
+            format(r"^([0-9]{2}) -  (\S.*)\.%s$", ext),
             // David Bowie - Santa Monica '72/(18) - Rock 'N' Roll Suicide.flac
             format(r"^\(([0-9]{2})\) - (\S.*)\.%s$", ext),
             // The Beatles - Yesterday And Today (Dr. Ebbets Mono Butcher Cover)-1966/01. Drive My Car.flac
@@ -78,7 +83,13 @@ void traverse(in string dir) {
                 //writefln("Good %s", entry);
                 break;
             case Result.fixableMusic:
-                writefln("Fix %s\n--> %s", baseName(entry), baseName(fixedPath));
+                //writefln("Fix %s", entry);
+                /+
+                writefln("Fix %s", baseName(entry));
+                writefln("--> %s", baseName(fixedPath));
+                +/
+                writefln("Renaming %s (to) %s", entry, fixedPath);
+                rename(entry, fixedPath);
                 break;
             case Result.badMusic:
                 writefln("Bad %s", entry);

@@ -8,6 +8,12 @@ Don't take it seriously, yet.
 Introduction
 ============
 
+Overview
+--------
+
+Doodle is a graphical tool for creating and editing diagrams
+that have an underlying semantic model.
+
 Decisions
 ---------
 
