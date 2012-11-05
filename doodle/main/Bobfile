@@ -1,3 +1,5 @@
 refer doodle/core doodle/dia doodle/fig doodle/gtk ;
 
-dist-exe doodle : doodle.d ;
+dist-exe doodle : doodle.d 
+                : dl gtkd-2
+                ;

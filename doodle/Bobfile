@@ -1,2 +1,2 @@
-#contain core tk dia fig gtk main ;
-contain play ;
+contain core tk dia fig gtk main play ;
+#contain play ;
