@@ -1,13 +1,13 @@
-dist-exe dupes : dupes.d : ;
+dist-exe dupes : dupes.d ;
 
-dist-exe play : play.d : ;
+dist-exe play : play.d ;
 
-dist-exe audio-file-renamer : audio_file_renamer.d : ;
+dist-exe audio-file-renamer : audio_file_renamer.d ;
 
-#dist-exe audio-file-retagger : audio_file_retagger.d : ;
+#dist-exe audio-file-retagger : audio_file_retagger.d ;
 
-dist-exe chess : chess.d : ;
+dist-exe chess : chess.d ;
 
-dist-exe id3tag : id3tag.d : id3tag ;
+dist-exe id3tag : id3tag.d ;
 
-dist-exe web-id3tag : web_id3tag.d : ;
+dist-exe web-id3tag : web_id3tag.d ;

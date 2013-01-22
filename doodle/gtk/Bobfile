@@ -1,6 +1,4 @@
 refer doodle/tk doodle/dia ;
 
 static-lib gtk : cairo_canvas.d cairo_renderer.d
-                 events.d palette.d ruler.d zoom_controls.d
-               :
-               ;
+                 events.d palette.d ruler.d zoom_controls.d ;
