@@ -102,7 +102,7 @@ void traverse(in string dir) {
     }
 }
 
-void main(string args[]) {
+void main(string[] args) {
     foreach(dir; args[1 .. $]) {
         if (isDir(dir)) {
             traverse(dir);

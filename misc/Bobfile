@@ -11,3 +11,5 @@ dist-exe chess : chess.d ;
 dist-exe id3tag : id3tag.d ;
 
 dist-exe web-id3tag : web_id3tag.d ;
+
+dist-exe strerror : strerror.cpp ;

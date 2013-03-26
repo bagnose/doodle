@@ -1,0 +1,4 @@
+refer misc ;
+static-lib common : common.hpp : common.cpp ;
+
+dist-exe tt : tt.cpp ;

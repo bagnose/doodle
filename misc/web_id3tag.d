@@ -41,12 +41,12 @@ class ID3Exception : Exception {
 // the function returns 'null'.
 
 ID3Tag* readID3Tag(Stream stream) {
-    ID3Tag*    tag;
+    ID3Tag* tag;
 
     // Read a string from a stream:
     string readString(Stream stream, int taglen) {
         // Read the string:
-        char[]    str = new char[taglen];
+        char[] str = new char[taglen];
         stream.readBlock(cast(void*)str.ptr, taglen);
 
         return str[0 .. taglen].idup;
@@ -56,8 +56,8 @@ ID3Tag* readID3Tag(Stream stream) {
     if (!stream.seekable) throw new ID3Exception("Stream must be seekable");
     if (!stream.readable) throw new ID3Exception("Stream must be readable");
 
-    char[]    blk = new char[4];
-    const char[3]    head = "ID3";
+    char[] blk = new char[4];
+    string head = "ID3";
 
     // Look for an ID3 v2 tag at the start of the stream:
     stream.seek(0x00, SeekPos.Set);
@@ -68,9 +68,9 @@ ID3Tag* readID3Tag(Stream stream) {
         // to be incorrect for certain ID3v2 layouts.  I have yet to hack out
         // that format.
 
-        bool    done = false;
-        uint    taglen;
-        ushort    dummy;
+        bool   done = false;
+        uint   taglen;
+        ushort dummy;
 
         tag = new ID3Tag;
         tag.id3version = 2;
