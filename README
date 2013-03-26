@@ -4,12 +4,14 @@ Author: David Bryant <bagnose@gmail.com>
 
 Build instructions (approximately - adjust for your local setup):
 
-1.  Clone and build bob: https://github.com/GrahamStJack/bob
+1.  Clone and build my 'doodle-support' branch of bob:
+    https://github.com/bagnose/bob
     Put executables bob and bob-config somewhere in your path.
 
         cd ${HOME}/source/d
         git clone https://github.com/GrahamStJack/bob.git bob.git
         cd bob.git
+        git checkout doodle-support
         ./build_with_dmd.sh         # XXX tries build directly into ~/bin
         cp bob bob-config ${HOME}/local/bin
 
