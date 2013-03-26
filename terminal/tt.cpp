@@ -31,9 +31,21 @@
 
 #include "terminal/common.hpp"
 
+// Control code: ascii 0-31, e.g. BS/backspace, CR/carriage-return, etc
+// Escape sequence: ESC followed by a series of 'ordinary' characters.
+//                  e.g. echo -e '\033[0;32mBLUE'
+//                       echo -e '\033[5B' (move the cursor down 5 lines)
+
 // TODO
 // Maybe we should call waitpid() when the read() fails?
 // What about the write() failing? EPIPE?
+
+// Ways we can tell the child has exited:
+//  - read error on pty
+//  - write error on pty
+//  - SIGCHLD
+//  
+//  Maybe, wait for read/write error and do a waitpid() ??
 
 class Tty {
 public:
@@ -81,9 +93,7 @@ public:
 
     ~Tty() {
         if (mOpen) {
-            if (::close(mFd) == -1) {
-                FATAL("::close() failed: " << ::strerror(errno));
-            }
+            ENFORCE_SYS(::close(mFd) != -1,);
             mPidTtyMap.erase(mPidTtyMap.find(mPid));
         }
     }
@@ -127,9 +137,7 @@ public:
 
             // XXX This seems to happen when the child terminates. I'm surprised
             // we don't get an EOF.
-            if (::close(mFd) == -1) {
-                FATAL("::close() failed: " << ::strerror(errno));
-            }
+            ENFORCE_SYS(::close(mFd) != -1,);
             mPidTtyMap.erase(mPidTtyMap.find(mPid));
             mPid  = 0;
             mOpen = false;
@@ -151,10 +159,16 @@ public:
 
     void enqueue(const char * data, size_t size) {
         ASSERT(mOpen, "Not open.");
+#if 0
         for (const char * d = data; size != 0; --size)
         {
             mWriteBuffer.push_back(*d);
         }
+#else
+        size_t oldSize = mWriteBuffer.size();
+        mWriteBuffer.resize(oldSize + size);
+        std::copy(data, data + size, &mWriteBuffer[oldSize]);
+#endif
     }
 
     void write() {
@@ -165,7 +179,8 @@ public:
                                mWriteBuffer.size());
 
         if (rval == -1) {
-            // XXX Deal with this case properly.
+            // XXX experimentation revealed that we get here if the
+            // child exits and there is data in the queue.
             ASSERT(false, "::write() failed.");
         }
         else if (rval == 0) {
@@ -182,34 +197,34 @@ protected:
         int master, slave;
         struct winsize winsize = { mColumns, mRows, 0, 0 };
 
-        int rval = ::openpty(&master, &slave, nullptr, nullptr, &winsize);
-        ASSERT(rval != -1, "openpty() failed.");
+        ENFORCE_SYS(::openpty(&master, &slave, nullptr, nullptr, &winsize) != -1,);
 
         pid_t pid = ::fork();
-        ASSERT(pid != -1, "fork() failed.");
+        ENFORCE_SYS(pid != -1, "::fork() failed.");
 
-        if (pid == 0) {
-            // Child codepath.
+        if (pid != 0) {
+            // Parent code-path.
 
-            // Create a new process group.
-            ::setsid();
-            // Hook stdin/out/err up to the PTY.
-            ::dup2(slave, STDIN_FILENO);
-            ::dup2(slave, STDOUT_FILENO);
-            ::dup2(slave, STDERR_FILENO);
-            if (::ioctl(slave, TIOCSCTTY, nullptr) == -1) {
-                ASSERT(false, "ioctl(TIOCSCTTY) failed.");
-            }
-            ::close(slave);
-            ::close(master);
-            execShell(windowId, term);
-        }
-        else {
-            // Parent codepath.
-            ::close(slave);
+            ENFORCE_SYS(::close(slave) != -1,);
+
+            // Stash the useful bits.
             mFd  = master;
             mPid = pid;
             mPidTtyMap[mPid] = this;
+        }
+        else {
+            // Child code-path.
+
+            // Create a new process group.
+            ENFORCE_SYS(::setsid() != -1, "");
+            // Hook stdin/out/err up to the PTY.
+            ENFORCE_SYS(::dup2(slave, STDIN_FILENO)  != -1,);
+            ENFORCE_SYS(::dup2(slave, STDOUT_FILENO) != -1,);
+            ENFORCE_SYS(::dup2(slave, STDERR_FILENO) != -1,);
+            ENFORCE_SYS(::ioctl(slave, TIOCSCTTY, nullptr) != -1,);
+            ENFORCE_SYS(::close(slave) != -1, "");
+            ENFORCE_SYS(::close(master) != -1,);
+            execShell(windowId, term);
         }
     }
 
@@ -254,23 +269,19 @@ protected:
 
         int stat = 0;
         pid_t pid = ::wait(&stat);
+        ENFORCE_SYS(pid != -1, "::wait failed.");
 
-        if (pid == -1) {
-            FATAL("wait() failed: " << ::strerror(errno));
+        // Map the pid back to the Tty and invoke the instance method.
+        PidTtyMap::const_iterator iter = mPidTtyMap.find(pid);
+
+        if (iter == mPidTtyMap.end()) {
+            // This can happen if the Tty object was destroyed before
+            // the child.
         }
         else {
-            // Map the pid back to the Tty and invoke the instance method.
-            PidTtyMap::const_iterator iter = mPidTtyMap.find(pid);
-
-            if (iter == mPidTtyMap.end()) {
-                // This can happen if the Tty object was destroyed before
-                // the child.
-            }
-            else {
-                Tty * tty = iter->second;
-                ASSERT(tty, "Null tty.");
-                tty->childExited(stat);
-            }
+            Tty * tty = iter->second;
+            ASSERT(tty, "Null tty.");
+            tty->childExited(stat);
         }
     }
 
@@ -542,6 +553,7 @@ typedef struct xcb_key_press_event_t {
         xcb_keysym_t sym =
             xcb_key_press_lookup_keysym(mKeySymbols, event, state_filtered);
 
+#if 0
         std::ostringstream modifiers;
         if (event->state & XCB_MOD_MASK_SHIFT)   { modifiers << "SHIFT "; }
         if (event->state & XCB_MOD_MASK_LOCK)    { modifiers << "LOCK "; }
@@ -558,6 +570,7 @@ typedef struct xcb_key_press_event_t {
               ", sym: " << sym <<
               ", ascii(int): " << (sym & 0x7f) <<
               ", modifiers: " << modifiers.str());
+#endif
 
         // TODO check sym against shortcuts
 
@@ -702,12 +715,19 @@ public:
 
     void run() {
         for (;;) {
+            int fdMax = 0;
             fd_set readFds, writeFds;
             FD_ZERO(&readFds); FD_ZERO(&writeFds);
+
             FD_SET(xcb_get_file_descriptor(mConnection), &readFds);
+            fdMax = std::max(fdMax, xcb_get_file_descriptor(mConnection));
+
             FD_SET(mWindow->getFd(), &readFds);
+            fdMax = std::max(fdMax, mWindow->getFd());
+
             if (!mWindow->queueEmpty()) {
                 FD_SET(mWindow->getFd(), &writeFds);
+                fdMax = std::max(fdMax, mWindow->getFd());
             }
 
             if (::select(std::max(mWindow->getFd(),
@@ -726,9 +746,11 @@ public:
                 mWindow->read();
             }
 
-            if (FD_ISSET(mWindow->getFd(), &writeFds)) {
-                //PRINT("window write event");
-                mWindow->write();
+            if (!mWindow->queueEmpty()) {
+                if (FD_ISSET(mWindow->getFd(), &writeFds)) {
+                    //PRINT("window write event");
+                    mWindow->write();
+                }
             }
         }
     }
