@@ -1,3 +1,5 @@
+// vi:noai:sw=4
+
 #ifndef TTY__H
 #define TTY__H
 
@@ -193,6 +195,8 @@ protected:
         if (!envShell) {
             envShell = "/bin/sh";
         }
+        // XXX use sh to avoid colour, etc.
+        envShell = "/bin/sh";
         ::setenv("TERM", term.c_str(), 1);
 
         const char * const args[] = { envShell, "-i", nullptr };

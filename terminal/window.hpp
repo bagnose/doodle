@@ -1,7 +1,11 @@
+// vi:noai:sw=4
+
 #ifndef WINDOW__H
 #define WINDOW__H
 
 #include "terminal/tty.hpp"
+
+#include <vector>
 
 namespace {
 
@@ -40,6 +44,10 @@ class Window : protected Tty::IObserver {
     uint16_t            mWidth;
     uint16_t            mHeight;
 
+    // XXX remove all this stuff:
+    typedef std::vector<std::string> Text;
+    Text mText;
+
 public:
     Window(xcb_connection_t  * connection,
            xcb_screen_t      * screen,
@@ -50,7 +58,10 @@ public:
         mWindow(0),
         mVisual(0),
         mFontFace(font_face),
-        mTty(*this)
+        mTty(*this),
+        mWidth(0),
+        mHeight(0),
+        mText(1, std::string())
     {
         uint32_t values[2];
         values[0] = screen->white_pixel;
@@ -194,42 +205,7 @@ typedef struct xcb_key_press_event_t {
               event->x << " " << event->y << " " <<
               event->width << " " << event->height);
 
-#if 0
-        xcb_clear_area(mConnection,
-                       0,   // exposures ??
-                       mWindow,
-                       event->x,
-                       event->y,
-                       event->width,
-                       event->height);
-#else
-        xcb_clear_area(mConnection,
-                       0,   // exposures ??
-                       mWindow,
-                       0, 0, mWidth, mHeight);
-#endif
-
-        cairo_surface_t * surface = cairo_xcb_surface_create(mConnection,
-                                                             mWindow,
-                                                             mVisual,
-                                                             mWidth, mHeight);
-
-        cairo_t * cr = cairo_create(surface);
-
-        cairo_set_source_rgba(cr, 0, 0, 0, 1);
-        cairo_move_to(cr, 10, 40);
-        cairo_set_font_face(cr, mFontFace);
-        cairo_set_font_size(cr, 15);
-        cairo_show_text(cr, "(_Hello World.");
-
-        ASSERT(cairo_status(cr) == 0,
-               "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
-
-        cairo_destroy(cr);
-
-        cairo_surface_destroy(surface);
-
-        xcb_flush(mConnection);
+        draw(event->x, event->y, event->width, event->height);
     }
 
     void configure(xcb_configure_notify_event_t * event) {
@@ -240,18 +216,110 @@ typedef struct xcb_key_press_event_t {
 
         mWidth  = event->width;
         mHeight = event->height;
+
+        draw(0, 0, mWidth, mHeight);
     }
 
 protected:
+    void draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
+        if (iw == 0 || ih == 0) {
+            return;
+        }
+
+        xcb_clear_area(mConnection,
+                       0,   // exposures ??
+                       mWindow,
+                       ix, iy, iw, ih);
+
+        // Create a full-sized surface.
+        cairo_surface_t * surface = cairo_xcb_surface_create(mConnection,
+                                                             mWindow,
+                                                             mVisual,
+                                                             mWidth, mHeight);
+
+        cairo_t * cr = cairo_create(surface);
+
+        double x = static_cast<double>(ix);
+        double y = static_cast<double>(iy);
+        double w = static_cast<double>(iw);
+        double h = static_cast<double>(ih);
+
+        cairo_save(cr); {
+          //PRINT(<< x << " " << y << " " << w << " " << h);
+          cairo_rectangle(cr, x, y, w, h);
+          cairo_clip(cr);
+
+          ASSERT(cairo_status(cr) == 0,
+                 "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
+          cairo_set_source_rgba(cr, 0, 0, 0, 1);
+          cairo_move_to(cr, 10, 40);
+          cairo_set_font_face(cr, mFontFace);
+          cairo_set_font_size(cr, 12.5);
+
+          ASSERT(cairo_status(cr) == 0,
+                 "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
+          double h_inc;
+          {
+            cairo_font_extents_t extents;
+            cairo_font_extents(cr, &extents);
+            h_inc = extents.height;
+            /*
+            PRINT("ascent=" << extents.ascent <<
+                  ", descent=" << extents.descent <<
+                  ", height=" << extents.height << 
+                  ", max-x-adv=" << extents.max_x_advance <<
+                  ", max-y-adv=" << extents.max_y_advance);
+                  */
+          }
+
+          double xx = 1.0;
+          double yy = 1.0;
+
+          ASSERT(cairo_status(cr) == 0,
+                 "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
+          for (auto c : mText) {
+            //PRINT("Drawing: " << c);
+            yy += h_inc;
+            cairo_move_to(cr, xx, yy);
+            cairo_show_text(cr, c.c_str());
+          }
+
+          ASSERT(cairo_status(cr) == 0,
+                 "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
+
+        } cairo_restore(cr);
+        cairo_destroy(cr);
+
+        cairo_surface_destroy(surface);
+
+        xcb_flush(mConnection);
+    }
+
     // Tty::IObserver implementation:
 
     void readResults(const char * data, size_t length) throw () {
         for (size_t i = 0; i != length; ++i) {
-            if (isascii(data[i])) {
-                PRINT("Got ascii: " << int(data[i]) << ": " << data[i]);
+          char c = data[i];
+            if (isascii(c)) {
+                //PRINT("Got ascii: " << int(c) << ": " << c);
+
+                // XXX total stupid hackery.
+                if (c == '\n') {
+                  mText.push_back(std::string());
+                }
+                else if (c == '\b') {
+                  if (!mText.back().empty()) {
+                    mText.back().pop_back();
+                  }
+                }
+                else {
+                  mText.back().push_back(c);
+                }
+
+                draw(0, 0, mWidth, mHeight);
             }
             else {
-                PRINT("Got other: " << int(data[i]));
+                //PRINT("Got other: " << int(c));
             }
         }
     }

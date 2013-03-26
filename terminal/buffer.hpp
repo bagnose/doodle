@@ -1,5 +1,11 @@
+// vi:noai:sw=4
+
 #ifndef BUFFER__H
 #define BUFFER__H
+
+#include "terminal/common.hpp"
+
+#include <iostream>
 
 const int UTF_SIZE = 4;
 
