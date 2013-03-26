@@ -43,6 +43,7 @@ class Window : protected Tty::IObserver {
     Tty                 mTty;
     uint16_t            mWidth;
     uint16_t            mHeight;
+    cairo_surface_t   * mSurface;
 
     // XXX remove all this stuff:
     typedef std::vector<std::string> Text;
@@ -61,6 +62,7 @@ public:
         mTty(*this),
         mWidth(0),
         mHeight(0),
+        mSurface(nullptr),
         mText(1, std::string())
     {
         uint32_t values[2];
@@ -100,6 +102,10 @@ public:
     }
 
     virtual ~Window() {
+        if (mSurface) {
+            cairo_surface_destroy(mSurface);
+        }
+
         xcb_destroy_window(mConnection, mWindow);
     }
 
@@ -217,6 +223,15 @@ typedef struct xcb_key_press_event_t {
         mWidth  = event->width;
         mHeight = event->height;
 
+        if (mSurface) {
+            cairo_surface_destroy(mSurface);
+        }
+
+        mSurface = cairo_xcb_surface_create(mConnection,
+                                            mWindow,
+                                            mVisual,
+                                            mWidth, mHeight);
+
         draw(0, 0, mWidth, mHeight);
     }
 
@@ -231,13 +246,8 @@ protected:
                        mWindow,
                        ix, iy, iw, ih);
 
-        // Create a full-sized surface.
-        cairo_surface_t * surface = cairo_xcb_surface_create(mConnection,
-                                                             mWindow,
-                                                             mVisual,
-                                                             mWidth, mHeight);
 
-        cairo_t * cr = cairo_create(surface);
+        cairo_t * cr = cairo_create(mSurface);
 
         double x = static_cast<double>(ix);
         double y = static_cast<double>(iy);
@@ -278,7 +288,6 @@ protected:
           ASSERT(cairo_status(cr) == 0,
                  "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
           for (auto c : mText) {
-            //PRINT("Drawing: " << c);
             yy += h_inc;
             cairo_move_to(cr, xx, yy);
             cairo_show_text(cr, c.c_str());
@@ -289,8 +298,6 @@ protected:
 
         } cairo_restore(cr);
         cairo_destroy(cr);
-
-        cairo_surface_destroy(surface);
 
         xcb_flush(mConnection);
     }
