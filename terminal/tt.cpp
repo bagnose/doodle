@@ -65,17 +65,8 @@ private:
     uint16_t            mRows, mColumns;
     int                 mFd;
     pid_t               mPid;
-    bool                mChildExited;
-    bool                mChildExitCode;
+    bool                mDumpWrites;
     std::deque<char>    mWriteBuffer;
-
-    // Status stuff:
-
-    typedef std::map<pid_t, Tty *> PidTtyMap;
-
-    static bool         mHandlerInstalled;
-    static sighandler_t mOldHandler;
-    static PidTtyMap    mPidTtyMap;
 
 public:
     explicit Tty(IObserver & observer) :
@@ -85,29 +76,15 @@ public:
         mColumns(0),
         mFd(-1),
         mPid(0),
-        mChildExited(false),
-        mChildExitCode(0)
+        mDumpWrites(false)
     {
-        ASSERT(mHandlerInstalled, "Handler must be installed.");
     }
 
     ~Tty() {
         if (mOpen) {
+            // wait pid?
             ENFORCE_SYS(::close(mFd) != -1,);
-            mPidTtyMap.erase(mPidTtyMap.find(mPid));
         }
-    }
-
-    static void installHandler() {
-        ASSERT(!mHandlerInstalled, "Handler already installed.");
-        mOldHandler = ::signal(SIGCHLD, &signalHandler);
-        mHandlerInstalled = true;
-    }
-
-    static void uninstallHandler() {
-        ASSERT(mHandlerInstalled, "Handler not installed.");
-        ::signal(SIGCHLD, mOldHandler);
-        mHandlerInstalled = false;
     }
 
     void open(uint16_t            rows,
@@ -118,6 +95,10 @@ public:
         mColumns = columns;
         openPty(windowId, term);
         mOpen    = true;
+    }
+
+    bool isOpen() const {
+        return mOpen;
     }
 
     // Only select on the fd, no read/write.
@@ -133,19 +114,19 @@ public:
         ssize_t rval = ::read(mFd, static_cast<void *>(buffer), sizeof buffer);
 
         if (rval == -1) {
-            ASSERT(mChildExited, "Child hasn't exited.");
-
-            // XXX This seems to happen when the child terminates. I'm surprised
-            // we don't get an EOF.
             ENFORCE_SYS(::close(mFd) != -1,);
-            mPidTtyMap.erase(mPidTtyMap.find(mPid));
+
+            int stat;
+            ENFORCE_SYS(::waitpid(mPid, &stat, 0) != -1,);
+            int exitCode = WIFEXITED(stat) ? WEXITSTATUS(stat) : EXIT_FAILURE;
+
             mPid  = 0;
             mOpen = false;
 
-            mObserver.childExited(mChildExitCode);
+            mObserver.childExited(exitCode);
         }
         else if (rval == 0) {
-            ASSERT(false, "EOF!");
+            ASSERT(false, "Expected -1 from ::read(), not EOF for child termination.");
         }
         else {
             mObserver.readResults(buffer, static_cast<size_t>(rval));
@@ -159,29 +140,26 @@ public:
 
     void enqueue(const char * data, size_t size) {
         ASSERT(mOpen, "Not open.");
-#if 0
-        for (const char * d = data; size != 0; --size)
-        {
-            mWriteBuffer.push_back(*d);
+
+        if (!mDumpWrites) {
+            size_t oldSize = mWriteBuffer.size();
+            mWriteBuffer.resize(oldSize + size);
+            std::copy(data, data + size, &mWriteBuffer[oldSize]);
         }
-#else
-        size_t oldSize = mWriteBuffer.size();
-        mWriteBuffer.resize(oldSize + size);
-        std::copy(data, data + size, &mWriteBuffer[oldSize]);
-#endif
     }
 
     void write() {
         ASSERT(mOpen, "Not open.");
-        ASSERT(!queueEmpty(), "No writes queued");
+        ASSERT(!queueEmpty(), "No writes queued.");
+        ASSERT(!mDumpWrites, "Dump writes is set.");
 
         ssize_t rval = ::write(mFd, static_cast<const void *>(&mWriteBuffer.front()),
                                mWriteBuffer.size());
 
         if (rval == -1) {
-            // XXX experimentation revealed that we get here if the
-            // child exits and there is data in the queue.
-            ASSERT(false, "::write() failed.");
+            // The child has gone. Don't write any more data.
+            mDumpWrites = true;
+            mWriteBuffer.clear();
         }
         else if (rval == 0) {
             ASSERT(false, "::write() zero bytes!");
@@ -210,7 +188,6 @@ protected:
             // Stash the useful bits.
             mFd  = master;
             mPid = pid;
-            mPidTtyMap[mPid] = this;
         }
         else {
             // Child code-path.
@@ -263,43 +240,7 @@ protected:
         // We only get here if the exec call failed.
         ERROR("Failed to launch: " << envShell);
     }
-
-    static void signalHandler(int sigNum) {
-        ASSERT(sigNum == SIGCHLD, "Unexpeted signal: " << ::strsignal(sigNum));
-
-        int stat = 0;
-        pid_t pid = ::wait(&stat);
-        ENFORCE_SYS(pid != -1, "::wait failed.");
-
-        // Map the pid back to the Tty and invoke the instance method.
-        PidTtyMap::const_iterator iter = mPidTtyMap.find(pid);
-
-        if (iter == mPidTtyMap.end()) {
-            // This can happen if the Tty object was destroyed before
-            // the child.
-        }
-        else {
-            Tty * tty = iter->second;
-            ASSERT(tty, "Null tty.");
-            tty->childExited(stat);
-        }
-    }
-
-    void childExited(int stat) {
-        if (WIFEXITED(stat)) {
-            mChildExitCode = WEXITSTATUS(stat);
-        }
-        else {
-            mChildExitCode = EXIT_FAILURE;
-        }
-
-        mChildExited = true;
-    }
 };
-
-bool Tty::mHandlerInstalled = false;
-sighandler_t Tty::mOldHandler = nullptr;
-Tty::PidTtyMap Tty::mPidTtyMap;
 
 //
 //
@@ -508,6 +449,10 @@ public:
         xcb_destroy_window(mConnection, mWindow);
     }
 
+    bool isOpen() const {
+        return mTty.isOpen();
+    }
+
     int getFd() {
         return mTty.getFd();
     }
@@ -634,11 +579,8 @@ typedef struct xcb_key_press_event_t {
         cairo_set_font_size(cr, 15);
         cairo_show_text(cr, "(_Hello World.");
 
-        if (cairo_status(cr)) {
-          printf("Cairo is unhappy: %s\n",
-                 cairo_status_to_string(cairo_status(cr)));
-          exit(0);
-        }
+        ASSERT(cairo_status(cr) == 0,
+               "Cairo error: " << cairo_status_to_string(cairo_status(cr)));
 
         cairo_destroy(cr);
 
@@ -744,6 +686,9 @@ public:
             if (FD_ISSET(mWindow->getFd(), &readFds)) {
                 //PRINT("window read event");
                 mWindow->read();
+                if (!mWindow->isOpen()) {
+                    break;
+                }
             }
 
             if (!mWindow->queueEmpty()) {
@@ -822,16 +767,12 @@ int main() {
         cairo_ft_font_face_create_for_ft_face(ft_face, 0);
     ASSERT(font_face, "Couldn't load font.");
 
-    Tty::installHandler();
-
     // Crank up the instance.
 
     SimpleEventLoop eventLoop(font_face);
     eventLoop.run();
 
     // Global finalisation.
-
-    Tty::uninstallHandler();
 
     cairo_font_face_destroy(font_face);
 
