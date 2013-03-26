@@ -1,4 +1,9 @@
 refer misc ;
-static-lib common : common.hpp : common.cpp ;
+static-lib common
+  :
+  buffer.hpp common.hpp tty.hpp window.hpp
+  :
+  common.cpp
+  ;
 
-dist-exe tt : tt.cpp ;
+dist-exe terminal : terminal.cpp ;

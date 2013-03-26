@@ -41,7 +41,7 @@
         std::terminate(); \
     } while (false)
 
-// ENFORCE and variants never get compiled out.
+// ENFORCE (and its variants) never get compiled out.
 #define ENFORCE(condition, output) \
     do { \
         if (!LIKELY(condition)) { \
@@ -57,7 +57,7 @@
 #define ENFORCE_SYS(condition, output) \
     ENFORCE(condition, "" output << " (" << ::strerror(errno) << ")")
 
-// ASSERT and variants may be compiled out.
+// ASSERT (and its variants) may be compiled out.
 #if 1
 #  define ASSERT(condition, output) \
     do { \
