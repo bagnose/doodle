@@ -1,9 +1,24 @@
 refer misc ;
+
 static-lib common
   :
-  buffer.hpp common.hpp tty.hpp window.hpp
+  common.hpp buffer.hpp tty.hpp utf8.hpp
   :
-  common.cpp
+  common.cpp utf8.cpp
   ;
 
-dist-exe terminal : terminal.cpp ;
+static-lib xcb
+  :
+  xcb_window.hpp
+  :
+  ;
+
+static-lib xlib
+  :
+  xlib_window.hpp
+  :
+  ;
+
+dist-exe xcb : xcb.cpp ;
+
+dist-exe xlib : xlib.cpp ;

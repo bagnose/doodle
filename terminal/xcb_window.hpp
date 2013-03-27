@@ -78,15 +78,13 @@ public:
             //XCB_EVENT_MASK_FOCUS_CHANGE |
             0;
 
-        uint64_t width = 320, height = 240;
-
         mWindow = xcb_generate_id(mConnection);
         xcb_create_window(mConnection,
                           XCB_COPY_FROM_PARENT,
                           mWindow,
                           screen->root,
                           -1, -1,       // x, y     (XXX correct?)
-                          width, height,
+                          320, 240,
                           0,            // border width
                           XCB_WINDOW_CLASS_INPUT_OUTPUT,
                           screen->root_visual,
@@ -114,6 +112,7 @@ public:
     }
 
     int getFd() {
+        ASSERT(isOpen(),);
         return mTty.getFd();
     }
 
@@ -128,6 +127,8 @@ public:
     void write() {
         mTty.write();
     }
+
+    // Events:
 
     void keyPress(xcb_key_press_event_t * event) {
         #if 0

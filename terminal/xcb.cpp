@@ -11,9 +11,7 @@
 #include <stdint.h>
 #include <signal.h>
 #include <unistd.h>
-#include <pwd.h>
 #include <sys/select.h>
-#include <sys/types.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_event.h>
@@ -26,7 +24,7 @@
 #include <cairo-xcb.h>
 #include <cairo-ft.h>
 
-#include "terminal/window.hpp"
+#include "terminal/xcb_window.hpp"
 #include "terminal/common.hpp"
 
 // Control code: ascii 0-31, e.g. BS/backspace, CR/carriage-return, etc
@@ -49,6 +47,7 @@ public:
     {
         int screenNum;
         mConnection = ::xcb_connect(nullptr, &screenNum);
+        ENFORCE(mConnection, "Failed to open display.");
 
         const xcb_setup_t * setup = ::xcb_get_setup(mConnection);
         xcb_screen_iterator_t screenIter = ::xcb_setup_roots_iterator(setup);
@@ -58,6 +57,8 @@ public:
         mKeySymbols = xcb_key_symbols_alloc(mConnection);
 
         mWindow = new Window(mConnection, mScreen, mKeySymbols, font_face);
+
+        loop();
     }
 
     ~SimpleEventLoop() {
@@ -68,8 +69,9 @@ public:
         ::xcb_disconnect(mConnection);
     }
 
-    void run() {
-        for (;;) {
+protected:
+    void loop() {
+        while (mWindow->isOpen()) {
             int fdMax = 0;
             fd_set readFds, writeFds;
             FD_ZERO(&readFds); FD_ZERO(&writeFds);
@@ -85,11 +87,7 @@ public:
                 fdMax = std::max(fdMax, mWindow->getFd());
             }
 
-            if (::select(std::max(mWindow->getFd(),
-                                  xcb_get_file_descriptor(mConnection)) + 1,
-                         &readFds, nullptr, nullptr, nullptr) == -1) {
-                ASSERT(false, "select() failed.");
-            }
+            ENFORCE_SYS(::select(fdMax + 1, &readFds, nullptr, nullptr, nullptr) != -1,);
 
             if (FD_ISSET(xcb_get_file_descriptor(mConnection), &readFds)) {
                 //PRINT("xevent");
@@ -140,12 +138,14 @@ public:
             case XCB_EXPOSE:
                 mWindow->expose(reinterpret_cast<xcb_expose_event_t *>(event));
                 break;
+                /*
             case XCB_MAP_NOTIFY:
                 PRINT("Got map notify");
                 break;
             case XCB_REPARENT_NOTIFY:
                 PRINT("Got reparent notify");
                 break;
+                */
             case XCB_CONFIGURE_NOTIFY:
                 mWindow->configure(reinterpret_cast<xcb_configure_notify_event_t *>(event));
                 break;
@@ -179,7 +179,6 @@ int main() {
     // Crank up the instance.
 
     SimpleEventLoop eventLoop(font_face);
-    eventLoop.run();
 
     // Global finalisation.
 

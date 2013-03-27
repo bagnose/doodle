@@ -3,11 +3,16 @@
 #ifndef TTY__H
 #define TTY__H
 
+#include "terminal/common.hpp"
+
+#include <deque>
+
+#include <unistd.h>
 #include <pty.h>
+#include <pwd.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-
-#include "terminal/common.hpp"
+#include <sys/types.h>
 
 class Tty {
 public:
@@ -77,6 +82,15 @@ public:
 
         if (rval == -1) {
             ENFORCE_SYS(::close(mFd) != -1,);
+
+            // XXX It is possible the slave has been stopped.
+            // We could send it SIGCONT. SIGPIPE?
+            // We shouldn't ::waitpid() and hang ( use WNOHANG)
+            // Sequence: wait,
+            // SIGINT, sleep, wait,
+            // SIGTERM, sleep, wait,
+            // SIGQUIT, sleep, wait
+            // SIGKILL and don't reap?
 
             int stat;
             ENFORCE_SYS(::waitpid(mPid, &stat, 0) != -1,);
@@ -191,18 +205,20 @@ protected:
         ::signal(SIGTERM, SIG_DFL);
         ::signal(SIGALRM, SIG_DFL);
 
-        const char * envShell = std::getenv("SHELL");
-        if (!envShell) {
-            envShell = "/bin/sh";
+        const char * shell = std::getenv("SHELL");
+        if (!shell) {
+            shell = "/bin/sh";
+            WARNING("Could not determine shell, falling back to: " << shell);
         }
         // XXX use sh to avoid colour, etc.
-        envShell = "/bin/sh";
+        shell = "/bin/sh";
         ::setenv("TERM", term.c_str(), 1);
 
-        const char * const args[] = { envShell, "-i", nullptr };
+        const char * const args[] = { shell, "-i", nullptr };
         ::execvp(args[0], const_cast<char * const *>(args));
         // We only get here if the exec call failed.
-        ERROR("Failed to launch: " << envShell);
+        ERROR("Failed to launch: " << shell);
+        std::exit(127); // Same as system() for failed commands.
     }
 };
 
