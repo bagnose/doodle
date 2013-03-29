@@ -1,10 +1,27 @@
 // vi:noai:sw=4
 
-#ifndef COMMON__H
-#define COMMON__H
+#ifndef COMMON__HPP
+#define COMMON__HPP
 
 #include <iostream>
+#include <sstream>
 #include <cstring>
+
+template <typename T> std::string stringify(const T & t) {
+    std::ostringstream ost;
+    ost << t;
+    return ost.str();
+}
+
+// Inherit from this to be uncopyable.
+class Uncopyable {
+public:
+    Uncopyable() {}
+
+private:
+    Uncopyable(const Uncopyable &) {}
+    Uncopyable & operator = (const Uncopyable &) { return *this; }
+};
 
 #define LIKELY(x)   __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
@@ -81,4 +98,4 @@
     do { } while (false)
 #endif
 
-#endif // COMMON__H
+#endif // COMMON__HPP

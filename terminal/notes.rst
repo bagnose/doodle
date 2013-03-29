@@ -41,3 +41,9 @@ Notes:
 - grab virtual boxes from: http://virtualboxes.org/images/centos/
 
 - Why doesn't st use xcb?
+
+
+
+
+- http://rtfm.etla.org/xterm/ctlseq.html
+- http://www.vt100.net/docs/

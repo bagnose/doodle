@@ -1,24 +1,26 @@
 refer misc ;
 
-static-lib common
+dist-exe query
   :
-  common.hpp buffer.hpp tty.hpp utf8.hpp
-  :
-  common.cpp utf8.cpp
+  query.cpp
   ;
 
-static-lib xcb
+static-lib common
   :
-  xcb_window.hpp
+  common.hpp utf8.hpp tty.hpp buffer.hpp terminal.hpp
   :
+  common.cpp utf8.cpp tty.cpp buffer.cpp terminal.cpp
   ;
+
+test-exe test-utf8 : test_utf8.cpp;
 
 static-lib xlib
   :
-  xlib_window.hpp
+  x_window.hpp x_font_set.hpp
   :
+  x_window.cpp x_font_set.cpp
   ;
 
-dist-exe xcb : xcb.cpp ;
+dist-exe terminal : main.cpp ;
 
-dist-exe xlib : xlib.cpp ;
+dist-exe web1 : web1.cpp ;

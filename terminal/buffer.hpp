@@ -1,16 +1,17 @@
 // vi:noai:sw=4
 
-#ifndef BUFFER__H
-#define BUFFER__H
+#ifndef BUFFER__HPP
+#define BUFFER__HPP
 
 #include "terminal/common.hpp"
+#include "terminal/utf8.hpp"
 
+#include <vector>
 #include <iostream>
-
-const int UTF_SIZE = 4;
+#include <cstdlib>
 
 struct Glyph {
-    char     c[UTF_SIZE];
+    char     ch[utf8::LMAX];
     uint8_t  mode;
     uint8_t  state;
     uint16_t fg;
@@ -22,21 +23,18 @@ struct Glyph {
 //
 
 struct Line {
-    //Glyph * glyphs;
-
-    explicit Line(const std::string str) : _str(str) {}
-    std::string _str;
+    std::vector<Glyph> glyphs;
 };
 
 std::ostream & operator << (std::ostream & ost, const Line & line) {
-    ost << line._str;
+    //ost << line._str;
     return ost;
 }
 
 // Circular buffer of lines. New lines are added to the end. Old lines
 // are removed from the beginning when capacity is reached.
 // When it's vertically shrunk you lose lines from the beginning.
-class Buffer {
+class Buffer : protected Uncopyable {
     Line   * _data;
     size_t   _capacity;
     size_t   _offset;
@@ -116,4 +114,4 @@ struct Selection {
 };
 #endif
 
-#endif // BUFFER__H
+#endif // BUFFER__HPP
