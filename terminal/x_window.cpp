@@ -14,10 +14,10 @@ X_Window::X_Window(Display            * display,
                    Screen             * screen,
                    X_FontSet          & fontSet,
                    const Tty::Command & command) :
-    mTerminal(*this),
     mDisplay(display),
     mScreen(screen),
-    mFontSet(fontSet)
+    mFontSet(fontSet),
+    mTerminal(nullptr)
 {
     XSetWindowAttributes attributes;
     attributes.background_pixel = XBlackPixelOfScreen(mScreen);
@@ -51,10 +51,12 @@ X_Window::X_Window(Display            * display,
 
     XFlush(mDisplay);
 
-    mTerminal.open(cols, rows, stringify(mWindow), "xterm", command);
+    mTerminal = new Terminal(*this, cols, rows, stringify(mWindow), "xterm", command);
 }
 
 X_Window::~X_Window() {
+    delete mTerminal;
+
     XDestroyWindow(mDisplay, mWindow);
 }
 
@@ -82,7 +84,7 @@ void X_Window::keyPress(XKeyEvent & event) {
           */
 
     if (len > 0) {
-        mTerminal.enqueue(buffer, len);
+        mTerminal->enqueue(buffer, len);
     }
 }
 
@@ -133,7 +135,7 @@ void X_Window::configure(XConfigureEvent & event) {
 
     ASSERT(rows > 0 && cols > 0,);
 
-    mTerminal.resize(cols, rows);
+    mTerminal->resize(cols, rows);
 
     draw(0, 0, mWidth, mHeight);
 }
@@ -156,12 +158,19 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                        XDefaultColormapOfScreen(mScreen),
                        &xrColor, &xftColor);
 
-    int x = 1, y = -1;
+    int y = -1;
 
-    for (const auto & line : mTerminal.text()) {
-        y += mFontSet.normal()->height + 1;
-        XftDrawStringUtf8(xftDraw, &xftColor,
-                          mFontSet.normal(), x, y, (const FcChar8 *)line.data(), line.size());
+    for (size_t r = 0; r != mTerminal->buffer().getSize(); ++r) {
+        int x = 1;
+        y += mFontSet.height() + 1;
+
+        for (size_t c = 0; c != mTerminal->buffer().getWidth(r); ++c) {
+            const Char & ch = mTerminal->buffer().getChar(r, c);
+            XftDrawStringUtf8(xftDraw, &xftColor,
+                              mFontSet.normal(), x, y,
+                              (const FcChar8 *)ch.bytes, utf8::leadLength(ch.bytes[0]));
+            x += mFontSet.width();
+        }
     }
 
     XftColorFree(mDisplay, XDefaultVisualOfScreen(mScreen),

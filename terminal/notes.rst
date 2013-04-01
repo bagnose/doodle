@@ -1,16 +1,16 @@
 Features:
 
-- utf-8
+- UTF-8
 
-- Scrolling
+- Scrollback (option for infinite)
+
+- Scroll history de-dupe across terminals.
 
 - Architect for tabs
 
 - Linux centric, backend-agnostic. Port to Xlib, Wayland, etc
 
-- Multiple profiles ?
-
-- Architect for spawn from daemon process (ala urxvt)
+- Design for spawn from daemon process (ala urxvt)
 
 - Resizing horizontally changes line-wrapping (urxvt vs xterm)
 
@@ -22,11 +22,11 @@ Features:
 
 - Block select
 
+- Hide cursor when typing.
+
 Decisions:
 
 - Write in C++11. Maybe port to D later.
-
-- Use XCB directly? What about Xft?
 
 - Extension language: lua? python?
 
@@ -36,14 +36,10 @@ Notes:
 
 - yaourt -S st / yaourt -S st-git
 
-- yaourt -Ql libxcb libxft
-
 - grab virtual boxes from: http://virtualboxes.org/images/centos/
 
-- Why doesn't st use xcb?
-
-
-
+Links:
 
 - http://rtfm.etla.org/xterm/ctlseq.html
+
 - http://www.vt100.net/docs/

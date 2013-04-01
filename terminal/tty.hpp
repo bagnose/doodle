@@ -50,15 +50,14 @@ private:
     std::vector<char>   mWriteBuffer;
 
 public:
-    explicit Tty(IObserver & observer);
+    Tty(IObserver         & observer,
+        uint16_t            cols,
+        uint16_t            rows,
+        const std::string & windowId,
+        const std::string & term,
+        const Command     & command);
 
     ~Tty();
-
-    void open(uint16_t            cols,
-              uint16_t            rows,
-              const std::string & windowId,
-              const std::string & term,
-              const Command     & command);
 
     bool isOpen() const;
 

@@ -9,35 +9,31 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
-Tty::Tty(IObserver & observer) :
+Tty::Tty(IObserver         & observer,
+         uint16_t            cols,
+         uint16_t            rows,
+         const std::string & windowId,
+         const std::string & term,
+         const Command     & command) :
     mObserver(observer),
     mDispatch(false),
-    mCols(0),
-    mRows(0),
+    mCols(cols),
+    mRows(rows),
     mFd(-1),
     mPid(0),
     mDumpWrites(false),
     mInEscape(false),
     mInCsiEscape(false),
     mInTestEscape(false)
-{}
+{
+    openPty(windowId, term, command);
+}
+
 
 Tty::~Tty() {
     if (isOpen()) {
         close();
     }
-}
-
-void Tty::open(uint16_t            cols,
-               uint16_t            rows,
-               const std::string & windowId,
-               const std::string & term,
-               const Command     & command)
-{
-    ASSERT(!mDispatch,);
-    mCols = cols;
-    mRows = rows;
-    openPty(windowId, term, command);
 }
 
 bool Tty::isOpen() const {

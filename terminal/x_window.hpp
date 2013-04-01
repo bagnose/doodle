@@ -20,13 +20,13 @@ class X_Window :
     static const int BORDER_THICKNESS;
     static const int SCROLLBAR_WIDTH;
 
-    Terminal    mTerminal;
     Display   * mDisplay;
     Screen    * mScreen;
     X_FontSet & mFontSet;
     Window      mWindow;
     uint16_t    mWidth;
     uint16_t    mHeight;
+    Terminal  * mTerminal;
 
 public:
     X_Window(Display            * display,
@@ -38,11 +38,11 @@ public:
 
     // The following calls are forwarded to the Terminal.
 
-    bool isOpen() const { return mTerminal.isOpen(); }
-    int getFd() { return mTerminal.getFd(); }
-    void read() { mTerminal.read(); }
-    bool isQueueEmpty() const { return mTerminal.isQueueEmpty(); }
-    void write() { mTerminal.write(); }
+    bool isOpen() const { return mTerminal->isOpen(); }
+    int getFd() { return mTerminal->getFd(); }
+    void read() { mTerminal->read(); }
+    bool isQueueEmpty() const { return mTerminal->isQueueEmpty(); }
+    void write() { mTerminal->write(); }
 
     // Events:
 

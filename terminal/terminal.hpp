@@ -4,6 +4,7 @@
 #define TERMINAL__HPP
 
 #include "terminal/tty.hpp"
+#include "terminal/buffer.hpp"
 
 class Terminal : protected Tty::IObserver {
 public:
@@ -21,40 +22,42 @@ public:
     typedef std::vector<std::string> Text;
 
 private:
-    IObserver & mObserver;
-    Tty mTty;
-    // XXX remove all this stuff:
-    Text mText;
+    IObserver     & _observer;
+    WrappedBuffer   _buffer;
+    size_t          _cursorRow;
+    size_t          _cursorCol;
+    Tty             _tty;
 
 public:
-    Terminal(IObserver & observer) :
-        mObserver(observer),
-        mTty(*this),
-        mText(1, std::string())
-    {
-    }
+    Terminal(IObserver          & observer,
+             uint16_t             cols,
+             uint16_t             rows,
+             const std::string  & windowId,
+             const std::string  & term,
+             const Tty::Command & command) :
+        _observer(observer),
+        _buffer(cols, rows, 1024),
+        _cursorRow(0),
+        _cursorCol(0),
+        _tty(*this,
+             cols, rows,
+             windowId,
+             term,
+             command) { }
 
     virtual ~Terminal() {}
 
-    const Text & text() const { return mText; }
+    const WrappedBuffer & buffer() const { return _buffer; }
 
-    // The following calls are forwarded to the Tty.
+    // TODO buffer access through scroll state.
 
-    void open(uint16_t             cols,
-              uint16_t             rows,
-              const std::string  & windowId,
-              const std::string  & term,
-              const Tty::Command & command) {
-        mTty.open(cols, rows, windowId, term, command);
-    }
-
-    bool isOpen() const { return mTty.isOpen(); }
-    int  getFd() { return mTty.getFd(); }
-    void read() { mTty.read(); }
-    void enqueue(const char * data, size_t size) { mTty.enqueue(data, size); }
-    bool isQueueEmpty() const { return mTty.isQueueEmpty(); }
-    void write() { mTty.write(); }
-    void resize(uint16_t cols, uint16_t rows) { mTty.resize(cols, rows); }
+    bool isOpen() const { return _tty.isOpen(); }
+    int  getFd() { return _tty.getFd(); }
+    void read() { _tty.read(); }
+    void enqueue(const char * data, size_t size) { _tty.enqueue(data, size); }
+    bool isQueueEmpty() const { return _tty.isQueueEmpty(); }
+    void write() { _tty.write(); }
+    void resize(uint16_t cols, uint16_t rows) { _tty.resize(cols, rows); }
 
 protected:
 

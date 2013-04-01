@@ -12,7 +12,8 @@ static-lib common
   common.cpp utf8.cpp tty.cpp buffer.cpp terminal.cpp
   ;
 
-test-exe test-utf8 : test_utf8.cpp;
+test-exe test-utf8   : test_utf8.cpp;
+test-exe test-buffer : test_buffer.cpp;
 
 static-lib xlib
   :
