@@ -418,3 +418,25 @@ int Tty::close() {
     ::kill(mPid, SIGKILL);
     waitReap(exitCode);
 }
+
+std::ostream & operator << (std::ostream & ost, Tty::Control control) {
+    switch (control) {
+        case Tty::CONTROL_BEL:
+            ost << "BEL";
+            break;
+        case Tty::CONTROL_HT:
+            ost << "HT";
+            break;
+        case Tty::CONTROL_BS:
+            ost << "BS";
+            break;
+        case Tty::CONTROL_CR:
+            ost << "CR";
+            break;
+        case Tty::CONTROL_LF:
+            ost << "LF";
+            break;
+    }
+
+    return ost;
+}

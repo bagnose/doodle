@@ -9,21 +9,14 @@ void Terminal::ttyBegin() throw () {
 }
 
 void Terminal::ttyControl(Tty::Control control) throw () {
+    PRINT("Control: " << control);
     switch (control) {
         case Tty::CONTROL_BEL:
             break;
         case Tty::CONTROL_HT:
             break;
-        case Tty::CONTROL_BS: {
-            --_cursorCol;
-            /*
-            auto & line = mText.back();
-            if (!line.empty()) {
-                // FIXME broken for utf8
-                mText.back().pop_back();
-            }
-            */
-        }
+        case Tty::CONTROL_BS:
+            _buffer.eraseChar(_cursorRow, --_cursorCol);
             break;
         case Tty::CONTROL_CR:
             break;
@@ -40,6 +33,7 @@ void Terminal::ttyControl(Tty::Control control) throw () {
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
+    PRINT("UTF-8: '" << std::string(s, s + length) << "'");
     _buffer.insertChar(Char::utf8(s, length), _cursorRow, _cursorCol);
     // FIXME we should be writing without worrying about wrapping, right?
     ++_cursorCol;

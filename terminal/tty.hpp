@@ -100,4 +100,6 @@ protected:
     int  close();
 };
 
+std::ostream & operator << (std::ostream & ost, Tty::Control control);
+
 #endif // TTY__HPP

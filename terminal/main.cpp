@@ -92,7 +92,7 @@ protected:
                     mWindow->configure(event.xconfigure);
                     break;
                 default:
-                    PRINT("Unrecognised event: " << event.type);
+                    //PRINT("Unrecognised event: " << event.type);
                     break;
             }
         }

@@ -104,6 +104,13 @@ public:
         ASSERT(!(col > line.chars.size()),);
         line.chars.insert(line.chars.begin() + col, ch);
     }
+
+    void eraseChar(size_t row, uint16_t col) {
+        ASSERT(row < _lines.size(),);
+        Line & line = _lines[row];
+        ASSERT(col < line.chars.size(),);
+        line.chars.erase(line.chars.begin() + col);
+    }
 };
 
 inline void dumpRawBuffer(const RawBuffer & buffer) {
@@ -209,6 +216,15 @@ public:
         _raw.insertChar(ch, line.row - _offset, line.colBegin + col);
         ++line.colEnd;
         // TODO deal with wrapping
+    }
+
+    void eraseChar(size_t row, uint16_t col) {
+        ASSERT(row < _lines.size(),);
+        Line & line = _lines[row];
+        ASSERT(col < line.colEnd,);
+        _raw.eraseChar(line.row - _offset, line.colBegin + col);
+        --line.colEnd;
+        // TODO deal with unwrapping
     }
 };
 

@@ -20,13 +20,13 @@ class X_Window :
     static const int BORDER_THICKNESS;
     static const int SCROLLBAR_WIDTH;
 
-    Display   * mDisplay;
-    Screen    * mScreen;
-    X_FontSet & mFontSet;
-    Window      mWindow;
-    uint16_t    mWidth;
-    uint16_t    mHeight;
-    Terminal  * mTerminal;
+    Display   * _display;
+    Screen    * _screen;
+    X_FontSet & _fontSet;
+    Window      _window;
+    uint16_t    _width;
+    uint16_t    _height;
+    Terminal  * _terminal;
 
 public:
     X_Window(Display            * display,
@@ -38,11 +38,11 @@ public:
 
     // The following calls are forwarded to the Terminal.
 
-    bool isOpen() const { return mTerminal->isOpen(); }
-    int getFd() { return mTerminal->getFd(); }
-    void read() { mTerminal->read(); }
-    bool isQueueEmpty() const { return mTerminal->isQueueEmpty(); }
-    void write() { mTerminal->write(); }
+    bool isOpen() const { return _terminal->isOpen(); }
+    int getFd() { return _terminal->getFd(); }
+    void read() { _terminal->read(); }
+    bool isQueueEmpty() const { return _terminal->isQueueEmpty(); }
+    void write() { _terminal->write(); }
 
     // Events:
 
@@ -54,6 +54,8 @@ public:
     void configure(XConfigureEvent & event);
 
 protected:
+    void rowCol2XY(uint16_t col, size_t row, uint16_t & x, uint16_t & y) const;
+
     void draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih);
 
     // Buffer::IObserver implementation:

@@ -48,6 +48,8 @@ public:
     virtual ~Terminal() {}
 
     const WrappedBuffer & buffer() const { return _buffer; }
+    size_t cursorCol() const { return _cursorCol; }
+    size_t cursorRow() const { return _cursorRow; }
 
     // TODO buffer access through scroll state.
 
