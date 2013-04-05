@@ -59,18 +59,17 @@ public:
     void enqueue(const char * data, size_t size) { _tty.enqueue(data, size); }
     bool isQueueEmpty() const { return _tty.isQueueEmpty(); }
     void write() { _tty.write(); }
-    void resize(uint16_t cols, uint16_t rows) { _tty.resize(cols, rows); }
+    void resize(uint16_t cols, uint16_t rows);
 
 protected:
 
     // Tty::IObserver implementation:
 
     void ttyBegin() throw ();
-
     void ttyControl(Tty::Control control) throw ();
-
+    void ttyMoveCursor(uint16_t row, uint16_t col) throw ();
+    void ttyClear(Tty::Clear clear) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
-
     void ttyEnd() throw ();
 
     void ttyChildExited(int exitCode) throw ();

@@ -2,12 +2,43 @@
 
 #include "terminal/tty.hpp"
 
+#include <sstream>
+
 #include <unistd.h>
 #include <pty.h>
 #include <pwd.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+
+namespace {
+
+    std::string strArgs(const std::vector<int32_t> & args) {
+        std::ostringstream str;
+        bool first = true;
+        for (auto a : args) {
+            if (first) { first = false; }
+            else       { str << " "; }
+            str << a;
+        }
+        return str.str();
+    }
+
+    int32_t nthArg(const std::vector<int32_t> & args, size_t n) {
+        ASSERT(n < args.size(),);
+        return args[n];
+    }
+
+    int32_t nthArgFallback(const std::vector<int32_t> & args, size_t n, int32_t fallback) {
+        if (n < args.size()) {
+            return args[n];
+        }
+        else {
+            return fallback;
+        }
+    }
+
+} // namespace {anonymous}
 
 Tty::Tty(IObserver         & observer,
          uint16_t            cols,
@@ -17,16 +48,12 @@ Tty::Tty(IObserver         & observer,
          const Command     & command) :
     mObserver(observer),
     mDispatch(false),
-    mCols(cols),
-    mRows(rows),
     mFd(-1),
     mPid(0),
     mDumpWrites(false),
-    mInEscape(false),
-    mInCsiEscape(false),
-    mInTestEscape(false)
+    mState(STATE_NORMAL)
 {
-    openPty(windowId, term, command);
+    openPty(cols, rows, windowId, term, command);
 }
 
 
@@ -66,10 +93,10 @@ void Tty::read() {
         ASSERT(rval > 0,);
         auto oldSize = mReadBuffer.size();
         mReadBuffer.resize(oldSize + rval);
-        std::copy(buffer, buffer + rval, &mReadBuffer[oldSize]);        // XXX illegal for deque
+        std::copy(buffer, buffer + rval, &mReadBuffer[oldSize]);
 
         mDispatch = true;
-        dispatchBuffer();
+        processBuffer();
         mDispatch = false;
     }
 }
@@ -118,20 +145,18 @@ void Tty::resize(uint16_t cols, uint16_t rows) {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
 
-    if (mCols != cols || mRows != rows) {
-        mCols = cols;
-        mRows = rows;
-        struct winsize winsize = { mRows, mCols, 0, 0 };
+    struct winsize winsize = { rows, cols, 0, 0 };
 
-        ENFORCE(::ioctl(mFd, TIOCSWINSZ, &winsize) != -1,);
-    }
+    ENFORCE(::ioctl(mFd, TIOCSWINSZ, &winsize) != -1,);
 }
 
-void Tty::openPty(const std::string & windowId,
+void Tty::openPty(uint16_t            cols,
+                  uint16_t            rows,
+                  const std::string & windowId,
                   const std::string & term,
                   const Command     & command) {
     int master, slave;
-    struct winsize winsize = { mRows, mCols, 0, 0 };
+    struct winsize winsize = { rows, cols, 0, 0 };
 
     ENFORCE_SYS(::openpty(&master, &slave, nullptr, nullptr, &winsize) != -1,);
 
@@ -208,7 +233,7 @@ void Tty::execShell(const std::string & windowId,
     std::exit(127); // Same as ::system() for failed commands.
 }
 
-void Tty::dispatchBuffer() {
+void Tty::processBuffer() {
     ASSERT(!mReadBuffer.empty(),);
 
     mObserver.ttyBegin();
@@ -222,7 +247,7 @@ void Tty::dispatchBuffer() {
             break;
         }
 
-        dispatchChar(&mReadBuffer[i], length);
+        processChar(&mReadBuffer[i], length);
 
         i += length;
     }
@@ -232,125 +257,24 @@ void Tty::dispatchBuffer() {
     mObserver.ttyEnd();
 }
 
-void Tty::dispatchChar(const char * s, utf8::Length length) {
+void Tty::processChar(const char * s, utf8::Length length) {
     if (length == utf8::L1) {
         char ascii = s[0];
         bool isControl = ascii < '\x20' || ascii == '\x7f';
 
         if (isControl) {
-            switch (s[0]) {
-                case '\a':
-                    mObserver.ttyControl(CONTROL_BEL);
-                    break;
-                case '\t':
-                    mObserver.ttyControl(CONTROL_HT);
-                    break;
-                case '\b':
-                    mObserver.ttyControl(CONTROL_BS);
-                    break;
-                case '\r':
-                    mObserver.ttyControl(CONTROL_CR);
-                    break;
-                case '\f':
-                case '\v':
-                case '\n':
-                    mObserver.ttyControl(CONTROL_LF);
-                    break;
-                case '\x1b':
-                    // ESC start
-                    //PRINT("Escape sequence started.");
-                    mInEscape = true;
-                    break;
-                default:
-                    PRINT("Ignored char: " << int(s[0]));
-                    break;
-            }
+            processControl(ascii);
         }
-        else if (mInEscape) {
-            //PRINT("esc: " << std::string(s, s + len));
+        else if (mState == STATE_ESCAPE_START) {
+            processEscape(ascii);
+        }
+        else if (mState == STATE_CSI_ESCAPE) {
+            mEscapeSeq.push_back(ascii);
 
-            if (mInCsiEscape) {
-                mEscapeSeq.push_back(ascii);
-
-                if (ascii >= 0x40 && ascii <= 0x7e) {
-                    PRINT("CSI-esc: " << mEscapeSeq);
-                    mInEscape = mInCsiEscape = false;
-                    mEscapeSeq.clear();
-                }
-            }
-            else {
-                switch (ascii) {
-                    case '[':
-                        // CSI
-                        mInCsiEscape = true;
-                        break;
-                    case '#':
-                        // test
-                        mInTestEscape = true;
-                        break;
-                    case 'P':
-                    case '_': /* APC -- Application Program Command */
-                    case '^': /* PM -- Privacy Message */
-                    case ']': /* OSC -- Operating System Command */
-                    case 'k': /* old title set compatibility */
-                        // ???
-                        break;
-                    case '(':
-                        // alt char set
-                        break;
-                    case ')':
-                    case '*':
-                    case '+':
-                        mInEscape = false;
-                        break;
-                    case 'D':   // IND - linefeed
-                        // TODO
-                        mInEscape = false;
-                        break;
-                    case 'E':   // NEL - next line
-                        // TODO
-                        mInEscape = false;
-                        break;
-                    case 'H':   // HTS - Horizontal tab stop.
-                        mInEscape = false;
-                        break;
-                    case 'M':   // RI - Reverse index.
-                        // TODO
-                        mInEscape = false;
-                        break;
-                    case 'Z':   // DECID -- Identify Terminal
-                        //ttywrite(VT102ID, sizeof(VT102ID) - 1);
-                        mInEscape = false;
-                        break;
-                    case 'c':   // RIS - Reset to initial state
-                        //treset();
-                        //xresettitle();
-                        mInEscape = false;
-                        break;
-                    case '=':   // DECPAM - Application keypad
-                        //term.mode |= MODE_APPKEYPAD;
-                        mInEscape = false;
-                        break;
-                    case '>':   // DECPNM - Normal keypad
-                        //term.mode &= ~MODE_APPKEYPAD;
-                        mInEscape = false;
-                        break;
-                    case '7':   // DECSC - Save Cursor
-                        //tcursor(CURSOR_SAVE);
-                        mInEscape = false;
-                        break;
-                    case '8':   // DECRC - Restore Cursor
-                        //tcursor(CURSOR_LOAD);
-                        mInEscape = false;
-                        break;
-                    case '\\': // ST -- Stop
-                        mInEscape = false;
-                        break;
-                    default:
-                        ERROR("Unknown escape sequence.");
-                        mInEscape = false;
-                        break;
-                }
+            if (ascii >= 0x40 && ascii <= 0x7e) {
+                processCsiEscape();
+                mState = STATE_NORMAL;
+                mEscapeSeq.clear();
             }
         }
         else {
@@ -358,11 +282,209 @@ void Tty::dispatchChar(const char * s, utf8::Length length) {
         }
     }
     else {
-        if (mInEscape) {
+        if (mState != STATE_NORMAL) {
             ERROR("Got UTF-8 whilst in escape seq.");
         }
 
         mObserver.ttyUtf8(s, length);
+    }
+}
+
+void Tty::processControl(char c) {
+    ASSERT(mState == STATE_NORMAL,);
+
+    switch (c) {
+        case '\a':
+            mObserver.ttyControl(CONTROL_BEL);
+            break;
+        case '\t':
+            mObserver.ttyControl(CONTROL_HT);
+            break;
+        case '\b':
+            mObserver.ttyControl(CONTROL_BS);
+            break;
+        case '\r':
+            mObserver.ttyControl(CONTROL_CR);
+            break;
+        case '\f':
+        case '\v':
+        case '\n':
+            mObserver.ttyControl(CONTROL_LF);
+            break;
+        case '\x1b':
+            // ESC start
+            //PRINT("Escape sequence started.");
+            mState = STATE_ESCAPE_START;
+            break;
+        default:
+            PRINT("Ignored char: " << int(c));
+            break;
+    }
+}
+
+void Tty::processEscape(char c) {
+    ASSERT(mState == STATE_ESCAPE_START,);
+
+    switch (c) {
+        case '[':
+            // CSI
+            mState = STATE_CSI_ESCAPE;
+            break;
+        case '#':
+            // test
+            mState = STATE_TEST_ESCAPE;
+            break;
+        case 'P':
+        case '_': /* APC -- Application Program Command */
+        case '^': /* PM -- Privacy Message */
+        case ']': /* OSC -- Operating System Command */
+        case 'k': /* old title set compatibility */
+            // ???
+            break;
+        case '(':
+            // alt char set
+            break;
+        case ')':
+        case '*':
+        case '+':
+            mState = STATE_NORMAL;
+            break;
+        case 'D':   // IND - linefeed
+            // TODO
+            mState = STATE_NORMAL;
+            break;
+        case 'E':   // NEL - next line
+            // TODO
+            mState = STATE_NORMAL;
+            break;
+        case 'H':   // HTS - Horizontal tab stop.
+            mState = STATE_NORMAL;
+            break;
+        case 'M':   // RI - Reverse index.
+            // TODO
+            mState = STATE_NORMAL;
+            break;
+        case 'Z':   // DECID -- Identify Terminal
+            //ttywrite(VT102ID, sizeof(VT102ID) - 1);
+            mState = STATE_NORMAL;
+            break;
+        case 'c':   // RIS - Reset to initial state
+            //treset();
+            //xresettitle();
+            mState = STATE_NORMAL;
+            break;
+        case '=':   // DECPAM - Application keypad
+            //term.mode |= MODE_APPKEYPAD;
+            mState = STATE_NORMAL;
+            break;
+        case '>':   // DECPNM - Normal keypad
+            //term.mode &= ~MODE_APPKEYPAD;
+            mState = STATE_NORMAL;
+            break;
+        case '7':   // DECSC - Save Cursor
+            //tcursor(CURSOR_SAVE);
+            mState = STATE_NORMAL;
+            break;
+        case '8':   // DECRC - Restore Cursor
+            //tcursor(CURSOR_LOAD);
+            mState = STATE_NORMAL;
+            break;
+        case '\\': // ST -- Stop
+            mState = STATE_NORMAL;
+            break;
+        default:
+            ERROR("Unknown escape sequence.");
+            mState = STATE_NORMAL;
+            break;
+    }
+}
+
+void Tty::processCsiEscape() {
+    ENFORCE(mState == STATE_CSI_ESCAPE,);
+    //PRINT("CSI-esc: " << mEscapeSeq);
+
+    size_t i = 0;
+    bool priv = false;
+    std::vector<int32_t> args;
+
+    if (mEscapeSeq.front() == '?') {
+        ++i;
+        priv = true;
+    }
+
+    bool inArg = false;
+
+    while (i != mEscapeSeq.size()) {
+        char c = mEscapeSeq[i];
+
+        if (c >= '0' && c <= '9') {
+            if (!inArg) {
+                args.push_back(0);
+                inArg = true;
+            }
+            args.back() = 10 * args.back() + c - '0';
+        }
+        else {
+            if (inArg) {
+                inArg = false;
+            }
+
+            if (c != ';') {
+                break;
+            }
+        }
+
+        ++i;
+    }
+
+    if (i == mEscapeSeq.size()) {
+        ERROR("Bad CSI: " << mEscapeSeq);
+    }
+    else {
+        char mode = mEscapeSeq[i];
+        switch (mode) {
+            case 'h':
+                PRINT(<<"CSI: Set terminal mode: " << strArgs(args));
+                break;
+            case 'g':
+                PRINT(<<"CSI: Tabulation clear");
+                break;
+            case 'H':
+            case 'f': {
+                uint16_t row = nthArgFallback(args, 0, 1) - 1;
+                uint16_t col = nthArgFallback(args, 1, 1) - 1;
+                PRINT("CSI: Move cursor: row=" << row << ", col=" << col);
+                mObserver.ttyMoveCursor(row, col);
+            }
+                break;
+            //case '!':
+                //break;
+            case 'l':
+                PRINT(<<"CSI: Reset terminal mode: priv=" << priv << ", args: " << strArgs(args));
+                break;
+            case 'J':
+                // Clear screen.
+                switch (nthArg(args, 0)) {
+                    case 0:
+                        // below
+                        mObserver.ttyClear(CLEAR_BELOW);
+                        break;
+                    case 1:
+                        // above
+                        mObserver.ttyClear(CLEAR_ABOVE);
+                        break;
+                    case 2:
+                        // all
+                        mObserver.ttyClear(CLEAR_ALL);
+                        break;
+                    default:
+                        FATAL("");
+                }
+                break;
+            default:
+                PRINT(<<"CSI: UNKNOWN: mode=" << mode << ", priv=" << priv << ", args: " << strArgs(args));
+                break;
+        }
     }
 }
 

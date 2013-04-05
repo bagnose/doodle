@@ -111,6 +111,10 @@ public:
         ASSERT(col < line.chars.size(),);
         line.chars.erase(line.chars.begin() + col);
     }
+
+    void clear() {
+        _lines.clear();
+    }
 };
 
 inline void dumpRawBuffer(const RawBuffer & buffer) {
@@ -225,6 +229,12 @@ public:
         _raw.eraseChar(line.row - _offset, line.colBegin + col);
         --line.colEnd;
         // TODO deal with unwrapping
+    }
+
+    void clear() {
+        _lines.clear();
+        _raw.clear();
+        addLine();      // XXX
     }
 };
 
