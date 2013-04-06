@@ -36,6 +36,8 @@ public:
         // escapes
         virtual void ttyMoveCursor(uint16_t row, uint16_t col) throw () = 0;
         virtual void ttyClear(Clear clear) throw () = 0;
+        virtual void ttySetFg(uint8_t fg) throw () = 0;
+        virtual void ttySetBg(uint8_t bg) throw () = 0;
         // UTF-8
         virtual void ttyUtf8(const char * s, utf8::Length length) throw () = 0;
         // end
@@ -69,8 +71,8 @@ private:
 
 public:
     Tty(IObserver         & observer,
-        uint16_t            cols,
         uint16_t            rows,
+        uint16_t            cols,
         const std::string & windowId,
         const std::string & term,
         const Command     & command);
@@ -95,11 +97,11 @@ public:
     void write();
 
     // Number of rows or columns may have changed.
-    void resize(uint16_t cols, uint16_t rows);
+    void resize(uint16_t rows, uint16_t cols);
 
 protected:
-    void openPty(uint16_t            cols,
-                 uint16_t            rows,
+    void openPty(uint16_t            rows,
+                 uint16_t            cols,
                  const std::string & windowId,
                  const std::string & term,
                  const Command     & command);
@@ -114,6 +116,7 @@ protected:
     void processControl(char c);
     void processEscape(char c);
     void processCsiEscape();
+    void processBlah(const std::vector<int32_t> & args);
 
     bool pollReap(int & exitCode, int msec);
     void waitReap(int & exitCode);

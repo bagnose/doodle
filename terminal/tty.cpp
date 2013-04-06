@@ -41,8 +41,8 @@ namespace {
 } // namespace {anonymous}
 
 Tty::Tty(IObserver         & observer,
-         uint16_t            cols,
          uint16_t            rows,
+         uint16_t            cols,
          const std::string & windowId,
          const std::string & term,
          const Command     & command) :
@@ -53,7 +53,7 @@ Tty::Tty(IObserver         & observer,
     mDumpWrites(false),
     mState(STATE_NORMAL)
 {
-    openPty(cols, rows, windowId, term, command);
+    openPty(rows, cols, windowId, term, command);
 }
 
 
@@ -77,10 +77,10 @@ int Tty::getFd() {
 void Tty::read() {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
-    char buffer[1024];
+    char buffer[4096];
 
     ssize_t rval = ::read(mFd, static_cast<void *>(buffer), sizeof buffer);
-    //PRINT("::read()=" << rval);
+    PRINT("::read()=" << rval);
 
     if (rval == -1) {
         mObserver.ttyChildExited(close());
@@ -141,7 +141,7 @@ void Tty::write() {
     }
 }
 
-void Tty::resize(uint16_t cols, uint16_t rows) {
+void Tty::resize(uint16_t rows, uint16_t cols) {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
 
@@ -150,8 +150,8 @@ void Tty::resize(uint16_t cols, uint16_t rows) {
     ENFORCE(::ioctl(mFd, TIOCSWINSZ, &winsize) != -1,);
 }
 
-void Tty::openPty(uint16_t            cols,
-                  uint16_t            rows,
+void Tty::openPty(uint16_t            rows,
+                  uint16_t            cols,
                   const std::string & windowId,
                   const std::string & term,
                   const Command     & command) {
@@ -392,6 +392,8 @@ void Tty::processEscape(char c) {
         case '\\': // ST -- Stop
             mState = STATE_NORMAL;
             break;
+        case 'm':
+            break;
         default:
             ERROR("Unknown escape sequence.");
             mState = STATE_NORMAL;
@@ -481,9 +483,47 @@ void Tty::processCsiEscape() {
                         FATAL("");
                 }
                 break;
+            case 'm':
+                processBlah(args);
+                break;
             default:
                 PRINT(<<"CSI: UNKNOWN: mode=" << mode << ", priv=" << priv << ", args: " << strArgs(args));
                 break;
+        }
+    }
+}
+
+void Tty::processBlah(const std::vector<int32_t> & args) {
+    for (size_t i = 0; i != args.size(); ++i) {
+        int32_t v = args[i];
+
+        switch (v) {
+            case 0:
+                mObserver.ttySetFg(0);
+                mObserver.ttySetBg(0);
+                break;
+            case 38:
+                break;
+            default:
+                if (v >= 30 && v < 38) {
+                    // normal fg
+                    mObserver.ttySetFg(v - 30);
+                }
+                else if (v >= 40 && v < 48) {
+                    // bright fg
+                    mObserver.ttySetBg(v - 40);
+                }
+                else if (v >= 90 && v < 98) {
+                    // normal bg
+                    mObserver.ttySetFg(v - 90 + 8);
+                }
+                else if (v >= 100 && v < 108) {
+                    // bright bg
+                    mObserver.ttySetBg(v - 100 + 8);
+                }
+                else {
+                    ERROR("Unhandled Blah");
+                }
         }
     }
 }

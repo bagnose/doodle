@@ -6,24 +6,31 @@
 #include <sstream>
 
 #include <X11/Xutil.h>
+#include <X11/Xft/Xft.h>
 
 const int X_Window::BORDER_THICKNESS = 1;
 const int X_Window::SCROLLBAR_WIDTH  = 8;
 
 X_Window::X_Window(Display            * display,
                    Screen             * screen,
+                   X_ColorSet         & colorSet,
                    X_FontSet          & fontSet,
                    const Tty::Command & command) :
     _display(display),
     _screen(screen),
+    _colorSet(colorSet),
     _fontSet(fontSet),
+    _damage(false),
+    _window(0),
+    _width(0),
+    _height(0),
     _terminal(nullptr)
 {
     XSetWindowAttributes attributes;
     attributes.background_pixel = XBlackPixelOfScreen(_screen);
 
-    uint16_t cols = 80;
     uint16_t rows = 25;
+    uint16_t cols = 80;
 
     uint16_t width  = 2 * BORDER_THICKNESS + cols * _fontSet.width() + SCROLLBAR_WIDTH;
     uint16_t height = 2 * BORDER_THICKNESS + rows * _fontSet.height();
@@ -51,7 +58,7 @@ X_Window::X_Window(Display            * display,
 
     XFlush(_display);
 
-    _terminal = new Terminal(*this, cols, rows, stringify(_window), "xterm", command);
+    _terminal = new Terminal(*this, rows, cols, stringify(_window), "xterm", command);
 }
 
 X_Window::~X_Window() {
@@ -122,7 +129,7 @@ void X_Window::configure(XConfigureEvent & event) {
     _width  = event.width;
     _height = event.height;
 
-    uint16_t cols, rows;
+    uint16_t rows, cols;
 
     if (_width  > 2 * BORDER_THICKNESS + _fontSet.width() + SCROLLBAR_WIDTH &&
         _height > 2 * BORDER_THICKNESS + _fontSet.height())
@@ -130,8 +137,8 @@ void X_Window::configure(XConfigureEvent & event) {
         uint16_t w = _width  - (2 * BORDER_THICKNESS + SCROLLBAR_WIDTH);
         uint16_t h = _height - (2 * BORDER_THICKNESS);
 
-        cols = w / _fontSet.width();
         rows = h / _fontSet.height();
+        cols = w / _fontSet.width();
     }
     else {
         rows = cols = 1;
@@ -139,7 +146,7 @@ void X_Window::configure(XConfigureEvent & event) {
 
     ASSERT(rows > 0 && cols > 0,);
 
-    _terminal->resize(cols, rows);
+    _terminal->resize(rows, cols);
 
     draw(0, 0, _width, _height);
 }
@@ -157,8 +164,8 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                                       XDefaultVisualOfScreen(_screen),
                                       XDefaultColormapOfScreen(_screen));
 
-    XRenderColor xrColor;
     XftColor     xftColor;
+    XRenderColor xrColor;
 
     xrColor.red   = 0x7777;
     xrColor.green = 0xaaaa;
@@ -169,15 +176,20 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                        XDefaultColormapOfScreen(_screen),
                        &xrColor, &xftColor);
 
-    for (size_t r = 0; r != _terminal->buffer().getSize(); ++r) {
-        for (size_t c = 0; c != _terminal->buffer().getWidth(r); ++c) {
+    for (size_t r = 0; r != _terminal->buffer().getRows(); ++r) {
+        for (size_t c = 0; c != _terminal->buffer().getCols(); ++c) {
             uint16_t x, y;
             rowCol2XY(c, r, x, y);
 
             const Char & ch = _terminal->buffer().getChar(r, c);
-            XftDrawStringUtf8(xftDraw, &xftColor,
+
+            const XftColor & fgColor = _colorSet.getIndexedColor(ch.fg);
+
+            XftDrawStringUtf8(xftDraw,
+                              &fgColor,
                               _fontSet.normal(), x, y,
-                              (const FcChar8 *)ch.bytes, utf8::leadLength(ch.bytes[0]));
+                              reinterpret_cast<const FcChar8 *>(ch.bytes),
+                              utf8::leadLength(ch.bytes[0]));
             x += _fontSet.width();
         }
     }
@@ -220,8 +232,12 @@ void X_Window::terminalBegin() throw () {
 }
 
 void X_Window::damageAll() throw () {
+    _damage = true;
 }
 
 void X_Window::terminalEnd() throw () {
-    draw(0, 0, _width, _height);
+    if (_damage) {
+        draw(0, 0, _width, _height);
+        _damage = false;
+    }
 }

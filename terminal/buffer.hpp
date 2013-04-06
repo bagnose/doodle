@@ -4,55 +4,12 @@
 #define BUFFER__HPP
 
 #include "terminal/common.hpp"
-#include "terminal/utf8.hpp"
+#include "terminal/char.hpp"
 
 #include <vector>
 #include <deque>
 #include <iostream>
 #include <cstdlib>
-
-struct Char {
-    static Char ascii(char c) {
-        Char ch;
-        ch.bytes[0] = c;
-        ch.bytes[1] = '\0';
-        ch.bytes[2] = '\0';
-        ch.bytes[3] = '\0';
-        ch.mode  = 0;
-        ch.state = 0;
-        ch.fg    = 0;
-        ch.bg    = 0;
-        return ch;
-    }
-
-    static Char utf8(const char * s, utf8::Length length) {
-        Char ch;
-        std::copy(s, s + length, ch.bytes);
-        ch.mode = 0;
-        ch.state = 0;
-        ch.fg    = 0;
-        ch.bg    = 0;
-        return ch;
-    }
-
-    char     bytes[utf8::LMAX];
-    uint8_t  mode;
-    uint8_t  state;
-    uint16_t fg;
-    uint16_t bg;
-};
-
-inline std::ostream & operator << (std::ostream & ost, const Char & ch) {
-    utf8::Length l = utf8::leadLength(ch.bytes[0]);
-    for (size_t i = 0; i != l; ++i) {
-        ost << ch.bytes[i];
-    }
-    return ost;
-}
-
-//
-//
-//
 
 class RawBuffer : protected Uncopyable {
     struct Line {

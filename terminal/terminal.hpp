@@ -4,13 +4,15 @@
 #define TERMINAL__HPP
 
 #include "terminal/tty.hpp"
-#include "terminal/buffer.hpp"
+#include "terminal/simple_buffer.hpp"
 
 class Terminal : protected Tty::IObserver {
 public:
     class IObserver {
     public:
         virtual void terminalBegin() throw () = 0;
+        //virtual void damage(uint16_t row, uint16_t col) throw () = 0;
+        //virtual void damageRange(uint16_t row, uint16_t col) throw () = 0;
         virtual void damageAll() throw () = 0;
         virtual void terminalEnd() throw () = 0;
 
@@ -19,35 +21,26 @@ public:
         virtual ~IObserver() {}
     };
 
-    typedef std::vector<std::string> Text;
-
 private:
     IObserver     & _observer;
-    WrappedBuffer   _buffer;
-    size_t          _cursorRow;
-    size_t          _cursorCol;
+    SimpleBuffer    _buffer;
+    uint16_t        _cursorRow;
+    uint16_t        _cursorCol;
+    uint8_t         _bg;
+    uint8_t         _fg;
     Tty             _tty;
 
 public:
     Terminal(IObserver          & observer,
-             uint16_t             cols,
              uint16_t             rows,
+             uint16_t             cols,
              const std::string  & windowId,
              const std::string  & term,
-             const Tty::Command & command) :
-        _observer(observer),
-        _buffer(cols, rows, 1024),
-        _cursorRow(0),
-        _cursorCol(0),
-        _tty(*this,
-             cols, rows,
-             windowId,
-             term,
-             command) { }
+             const Tty::Command & command);
 
-    virtual ~Terminal() {}
+    virtual ~Terminal();
 
-    const WrappedBuffer & buffer() const { return _buffer; }
+    const SimpleBuffer & buffer() const { return _buffer; }
     size_t cursorCol() const { return _cursorCol; }
     size_t cursorRow() const { return _cursorRow; }
 
@@ -59,7 +52,7 @@ public:
     void enqueue(const char * data, size_t size) { _tty.enqueue(data, size); }
     bool isQueueEmpty() const { return _tty.isQueueEmpty(); }
     void write() { _tty.write(); }
-    void resize(uint16_t cols, uint16_t rows);
+    void resize(uint16_t rows, uint16_t cols);
 
 protected:
 
@@ -69,6 +62,8 @@ protected:
     void ttyControl(Tty::Control control) throw ();
     void ttyMoveCursor(uint16_t row, uint16_t col) throw ();
     void ttyClear(Tty::Clear clear) throw ();
+    void ttySetFg(uint8_t fg) throw ();
+    void ttySetBg(uint8_t bg) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 

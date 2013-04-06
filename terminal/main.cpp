@@ -2,6 +2,7 @@
 
 #include "terminal/common.hpp"
 #include "terminal/x_window.hpp"
+#include "terminal/x_color_set.hpp"
 #include "terminal/x_font_set.hpp"
 
 #include <string>
@@ -16,10 +17,11 @@ class SimpleEventLoop : protected Uncopyable {
 public:
     SimpleEventLoop(Display            * display,
                     Screen             * screen,
+                    X_ColorSet         & colorSet,
                     X_FontSet          & fontSet,
                     const Tty::Command & command) :
         mDisplay(display),
-        mWindow(new X_Window(mDisplay, screen, fontSet, command))
+        mWindow(new X_Window(mDisplay, screen, colorSet, fontSet, command))
     {
         loop();
     }
@@ -161,10 +163,14 @@ int main(int argc, char * argv[]) {
     ENFORCE(display, "Failed to open display.");
     Screen * screen = XDefaultScreenOfDisplay(display);
     ASSERT(screen,);
+    Visual * visual = XDefaultVisualOfScreen(screen);
+    ASSERT(visual,);
+    Colormap colormap = XDefaultColormapOfScreen(screen);
 
-    X_FontSet fontSet(display, fontName);
+    X_ColorSet colorSet(display, visual, colormap);
+    X_FontSet  fontSet(display, fontName);
 
-    SimpleEventLoop eventLoop(display, screen, fontSet, command);
+    SimpleEventLoop eventLoop(display, screen, colorSet, fontSet, command);
 
     XCloseDisplay(display);
 

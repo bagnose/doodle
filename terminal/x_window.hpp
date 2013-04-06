@@ -5,13 +5,13 @@
 
 #include "terminal/common.hpp"
 #include "terminal/terminal.hpp"
+#include "terminal/x_color_set.hpp"
 #include "terminal/x_font_set.hpp"
 
 #include <vector>
 #include <string>
 
 #include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
 
 class X_Window :
     protected Terminal::IObserver,
@@ -20,17 +20,20 @@ class X_Window :
     static const int BORDER_THICKNESS;
     static const int SCROLLBAR_WIDTH;
 
-    Display   * _display;
-    Screen    * _screen;
-    X_FontSet & _fontSet;
-    Window      _window;
-    uint16_t    _width;
-    uint16_t    _height;
-    Terminal  * _terminal;
+    Display    * _display;
+    Screen     * _screen;
+    X_ColorSet & _colorSet;
+    X_FontSet  & _fontSet;
+    bool         _damage;
+    Window       _window;
+    uint16_t     _width;     // px
+    uint16_t     _height;    // px
+    Terminal   * _terminal;
 
 public:
     X_Window(Display            * display,
              Screen             * screen,
+             X_ColorSet         & colorSet,
              X_FontSet          & fontSet,
              const Tty::Command & command);
 

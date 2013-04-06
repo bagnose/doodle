@@ -2,9 +2,30 @@
 
 #include "terminal/terminal.hpp"
 
-void Terminal::resize(uint16_t cols, uint16_t rows) {
-    _buffer.setWrapCol(cols);
-    _tty.resize(cols, rows);
+Terminal::Terminal(IObserver          & observer,
+                   uint16_t             rows,
+                   uint16_t             cols,
+                   const std::string  & windowId,
+                   const std::string  & term,
+                   const Tty::Command & command) :
+    _observer(observer),
+    _buffer(rows, cols),
+    _cursorRow(0),
+    _cursorCol(0),
+    _bg(0),
+    _fg(15),
+    _tty(*this,
+         rows, cols,
+         windowId,
+         term,
+         command)
+{}
+
+Terminal::~Terminal() {}
+
+void Terminal::resize(uint16_t rows, uint16_t cols) {
+    _buffer.resize(rows, cols);
+    _tty.resize(rows, cols);
 }
 
 // Tty::IObserver implementation:
@@ -14,7 +35,7 @@ void Terminal::ttyBegin() throw () {
 }
 
 void Terminal::ttyControl(Tty::Control control) throw () {
-    PRINT("Control: " << control);
+    //PRINT("Control: " << control);
     switch (control) {
         case Tty::CONTROL_BEL:
             break;
@@ -27,9 +48,12 @@ void Terminal::ttyControl(Tty::Control control) throw () {
             _cursorCol = 0;
             break;
         case Tty::CONTROL_LF:
-            _buffer.addLine();
-            _cursorCol = 0;
-            ++_cursorRow;
+            if (_cursorRow == _buffer.getRows() - 1) {
+                _buffer.addLine();
+            }
+            else {
+                ++_cursorRow;
+            }
             break;
         default:
             break;
@@ -58,11 +82,29 @@ void Terminal::ttyClear(Tty::Clear clear) throw () {
     _observer.damageAll();
 }
 
+void Terminal::ttySetFg(uint8_t fg) throw () {
+    _fg = fg;
+}
+
+void Terminal::ttySetBg(uint8_t bg) throw () {
+    _bg = bg;
+}
+
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
     //PRINT("UTF-8: '" << std::string(s, s + length) << "'");
-    _buffer.insertChar(Char::utf8(s, length), _cursorRow, _cursorCol);
-    // FIXME we should be writing without worrying about wrapping, right?
+    _buffer.insertChar(Char::utf8(s, length, _fg, _bg), _cursorRow, _cursorCol);
     ++_cursorCol;
+
+    if (_cursorCol == _buffer.getCols()) {
+        if (_cursorRow == _buffer.getRows() - 1) {
+            _buffer.addLine();
+        }
+        else {
+            ++_cursorRow;
+        }
+        _cursorCol = 0;
+    }
+
     _observer.damageAll();
 }
 
