@@ -14,6 +14,7 @@
 class SimpleEventLoop : protected Uncopyable {
     Display    * mDisplay;
     I_X_Window & mWindow;
+
 public:
     SimpleEventLoop(Display     * display,
                     I_X_Window  & window) :

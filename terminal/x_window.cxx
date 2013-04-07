@@ -171,20 +171,20 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
         for (size_t c = 0; c != _terminal->buffer().getCols(); ++c) {
             const Char & ch = _terminal->buffer().getChar(r, c);
 
-            if (ch.bytes[0] != '\0') {
+            if (!ch.isNull()) {
                 // PRINT(<<ch);
                 uint16_t x, y;
                 rowCol2XY(c, r, x, y);
 
-                const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg);
-                const XftColor * bgColor = _colorSet.getIndexedColor(ch.bg);
+                const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg());
+                const XftColor * bgColor = _colorSet.getIndexedColor(ch.bg());
 
-                if (ch.attributes.get(ATTRIBUTE_REVERSE)) {
+                if (ch.attributes().get(ATTRIBUTE_REVERSE)) {
                     std::swap(fgColor, bgColor);
                 }
 
-                XftFont * font = _fontSet.get(ch.attributes.get(ATTRIBUTE_BOLD),
-                                              ch.attributes.get(ATTRIBUTE_ITALIC));
+                XftFont * font = _fontSet.get(ch.attributes().get(ATTRIBUTE_BOLD),
+                                              ch.attributes().get(ATTRIBUTE_ITALIC));
 
                 XftDrawRect(xftDraw,
                             bgColor,
@@ -197,8 +197,8 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                                   font,
                                   x,
                                   y + _fontSet.getAscent(),
-                                  reinterpret_cast<const FcChar8 *>(ch.bytes),
-                                  utf8::leadLength(ch.bytes[0]));
+                                  reinterpret_cast<const FcChar8 *>(ch.bytes()),
+                                  utf8::leadLength(ch.bytes()[0]));
             }
         }
     }

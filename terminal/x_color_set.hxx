@@ -11,11 +11,11 @@
 #include <X11/Xft/Xft.h>
 
 class X_ColorSet : protected Uncopyable {
-    Display               * _display;
-    Visual                * _visual;
-    Colormap                _colormap;
-    XftColor                _indexedColors[256];
-    XftColor                _cursorColor;
+    Display  * _display;
+    Visual   * _visual;
+    Colormap   _colormap;
+    XftColor   _indexedColors[256];
+    XftColor   _cursorColor;
 
 public:
     X_ColorSet(Display  * display,

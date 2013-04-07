@@ -14,6 +14,8 @@ enum Attribute {
     ATTRIBUTE_REVERSE
 };
 
+std::ostream & operator << (std::ostream & ost, Attribute    attribute);
+
 //
 //
 //
@@ -31,7 +33,6 @@ public:
     bool get(Attribute attribute) const { return _bits & bit(attribute); }
 };
 
-std::ostream & operator << (std::ostream & ost, Attribute    attribute);
 std::ostream & operator << (std::ostream & ost, AttributeSet attributeSet);
 
 #endif // ATTRIBUTES__H

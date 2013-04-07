@@ -8,11 +8,8 @@
 #include "terminal/x_font_set.hxx"
 #include "terminal/terminal.hxx"
 
-#include <vector>
-#include <string>
-
 class X_Window :
-    public I_X_Window,
+    public    I_X_Window,
     protected Terminal::IObserver,
     protected Uncopyable
 {

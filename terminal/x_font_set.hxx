@@ -9,13 +9,13 @@
 #include <X11/Xft/Xft.h>
 
 class X_FontSet : protected Uncopyable {
-    Display * _display;
-    XftFont * _normal;
-    XftFont * _bold;
-    XftFont * _italic;
-    XftFont * _italicBold;
-    uint16_t  _width, _height;
-    uint16_t  _ascent;
+    Display  * _display;
+    XftFont  * _normal;
+    XftFont  * _bold;
+    XftFont  * _italic;
+    XftFont  * _italicBold;
+    uint16_t   _width, _height;
+    uint16_t   _ascent;
 
 public:
     X_FontSet(Display           * display,
@@ -35,14 +35,14 @@ public:
         FATAL("Unreachable");
     }
 
-    XftFont * getNormal()     { return _normal; }
-    XftFont * getBold()       { return _bold; }
-    XftFont * getItalic()     { return _italic; }
+    XftFont * getNormal()     { return _normal;     }
+    XftFont * getBold()       { return _bold;       }
+    XftFont * getItalic()     { return _italic;     }
     XftFont * getItalicBold() { return _italicBold; }
 
     // Misc:
 
-    uint16_t getWidth()  const { return _width; }
+    uint16_t getWidth()  const { return _width;  }
     uint16_t getHeight() const { return _height; }
     uint16_t getAscent() const { return _ascent; }
 
