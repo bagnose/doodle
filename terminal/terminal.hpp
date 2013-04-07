@@ -64,6 +64,9 @@ protected:
     void ttyClear(Tty::Clear clear) throw ();
     void ttySetFg(uint8_t fg) throw ();
     void ttySetBg(uint8_t bg) throw ();
+    void ttyResetAttributes() throw ();
+    void ttyEnableAttribute(Tty::Attribute atttribute) throw ();
+    void ttyDisableAttribute(Tty::Attribute atttribute) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 

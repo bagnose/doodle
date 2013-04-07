@@ -11,6 +11,14 @@
 
 class Tty : protected Uncopyable {
 public:
+    enum Attribute {
+        ATTRIBUTE_BOLD,
+        ATTRIBUTE_ITALIC,
+        ATTRIBUTE_UNDERLINE,
+        ATTRIBUTE_BLINK,
+        ATTRIBUTE_REVERSE
+    };
+
     enum Control {
         CONTROL_BEL,
         CONTROL_HT,
@@ -38,6 +46,9 @@ public:
         virtual void ttyClear(Clear clear) throw () = 0;
         virtual void ttySetFg(uint8_t fg) throw () = 0;
         virtual void ttySetBg(uint8_t bg) throw () = 0;
+        virtual void ttyResetAttributes() throw () = 0;
+        virtual void ttyEnableAttribute(Attribute atttribute) throw () = 0;
+        virtual void ttyDisableAttribute(Attribute atttribute) throw () = 0;
         // UTF-8
         virtual void ttyUtf8(const char * s, utf8::Length length) throw () = 0;
         // end

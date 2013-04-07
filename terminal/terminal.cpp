@@ -13,7 +13,7 @@ Terminal::Terminal(IObserver          & observer,
     _cursorRow(0),
     _cursorCol(0),
     _bg(0),
-    _fg(15),
+    _fg(7),
     _tty(*this,
          rows, cols,
          windowId,
@@ -88,6 +88,15 @@ void Terminal::ttySetFg(uint8_t fg) throw () {
 
 void Terminal::ttySetBg(uint8_t bg) throw () {
     _bg = bg;
+}
+
+void Terminal::ttyResetAttributes() throw () {
+}
+
+void Terminal::ttyEnableAttribute(Tty::Attribute atttribute) throw () {
+}
+
+void Terminal::ttyDisableAttribute(Tty::Attribute atttribute) throw () {
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {

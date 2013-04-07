@@ -499,10 +499,53 @@ void Tty::processBlah(const std::vector<int32_t> & args) {
 
         switch (v) {
             case 0:
-                mObserver.ttySetFg(0);
+                mObserver.ttySetFg(7);
                 mObserver.ttySetBg(0);
+                mObserver.ttyResetAttributes();
+                break;
+            case 1:
+                mObserver.ttyEnableAttribute(ATTRIBUTE_BOLD);
+                break;
+            case 3:
+                mObserver.ttyEnableAttribute(ATTRIBUTE_ITALIC);
+                break;
+            case 4:
+                mObserver.ttyEnableAttribute(ATTRIBUTE_UNDERLINE);
+                break;
+            case 5: // slow blink
+            case 6: // rapid blink
+                mObserver.ttyEnableAttribute(ATTRIBUTE_BLINK);
+                break;
+            case 7:
+                mObserver.ttyEnableAttribute(ATTRIBUTE_REVERSE);
+                break;
+            case 21:
+            case 22:
+                mObserver.ttyDisableAttribute(ATTRIBUTE_BOLD);
+                break;
+            case 23:
+                mObserver.ttyDisableAttribute(ATTRIBUTE_ITALIC);
+                break;
+            case 24:
+                mObserver.ttyDisableAttribute(ATTRIBUTE_UNDERLINE);
+                break;
+            case 25:
+            case 26:
+                mObserver.ttyDisableAttribute(ATTRIBUTE_BLINK);
+                break;
+            case 27:
+                mObserver.ttyDisableAttribute(ATTRIBUTE_REVERSE);
                 break;
             case 38:
+                break;
+            case 39:
+                mObserver.ttySetFg(7);
+                break;
+            case 48:
+                // TODO
+                break;
+            case 49:
+                mObserver.ttySetBg(0);
                 break;
             default:
                 if (v >= 30 && v < 38) {

@@ -48,7 +48,7 @@ X_ColorSet::X_ColorSet(Display  * display,
 
     uint8_t index = 0;
 
-    for (size_t i = 0; i != 16; ++i) {
+    for (auto i = 0; i != 16; ++i) {
         const char * n = names[i];
         XftColorAllocName(_display, _visual, _colormap, n, &_indexedColors[i]);
         ++index;
@@ -71,7 +71,7 @@ X_ColorSet::X_ColorSet(Display  * display,
         ++index;
     }
 
-    for (size_t v = 0; v != 24; ++v) {
+    for (auto v = 0; v != 24; ++v) {
         XRenderColor  xrColor;
         xrColor.red = xrColor.green = xrColor.blue = 0x0808 + 0x0a0a * v;
         xrColor.alpha = 0xffff;

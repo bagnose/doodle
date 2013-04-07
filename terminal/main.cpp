@@ -130,7 +130,8 @@ int main(int argc, char * argv[]) {
     // -   master read
     // -   master write
 
-    std::string fontName = "inconsolata:pixelsize=16"; 
+    //std::string fontName = "inconsolata:pixelsize=16"; 
+    std::string fontName = "inconsolata:pixelsize=18"; 
     std::string geometryStr;
     Tty::Command command;
     bool accumulateCommand = false;
