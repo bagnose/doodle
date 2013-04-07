@@ -53,8 +53,8 @@ public:
     bool isOpen() const { return _tty.isOpen(); }
     int  getFd() { return _tty.getFd(); }
     void read() { _tty.read(); }
-    void enqueue(const char * data, size_t size) { _tty.enqueue(data, size); }
-    bool isQueueEmpty() const { return _tty.isQueueEmpty(); }
+    void enqueueWrite(const char * data, size_t size) { _tty.enqueueWrite(data, size); }
+    bool isWritePending() const { return _tty.isWritePending(); }
     void write() { _tty.write(); }
     void resize(uint16_t rows, uint16_t cols);
 

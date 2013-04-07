@@ -12,6 +12,7 @@ const int X_Window::BORDER_THICKNESS = 1;
 const int X_Window::SCROLLBAR_WIDTH  = 8;
 
 X_Window::X_Window(Display            * display,
+                   Window               parent,
                    Screen             * screen,
                    X_ColorSet         & colorSet,
                    X_FontSet          & fontSet,
@@ -36,13 +37,13 @@ X_Window::X_Window(Display            * display,
     uint16_t height = 2 * BORDER_THICKNESS + rows * _fontSet.getHeight();
 
     _window = XCreateWindow(_display,
-                            XRootWindowOfScreen(_screen),
+                            parent,
                             0, 0,          // x,y
                             width, height, // w,h
                             0,             // border width
-                            XDefaultDepthOfScreen(_screen),
+                            CopyFromParent,
                             InputOutput,
-                            XDefaultVisualOfScreen(_screen),
+                            CopyFromParent,
                             CWBackPixel,
                             &attributes);
 
@@ -93,7 +94,7 @@ void X_Window::keyPress(XKeyEvent & event) {
        */
 
     if (len > 0) {
-        _terminal->enqueue(buffer, len);
+        _terminal->enqueueWrite(buffer, len);
     }
 }
 

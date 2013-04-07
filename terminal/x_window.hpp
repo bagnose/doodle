@@ -13,6 +13,24 @@
 
 #include <X11/Xlib.h>
 
+/*
+class I_X_Window {
+public:
+    // Events:
+
+    void keyPress(XKeyEvent & event);
+    void keyRelease(XKeyEvent & event);
+    void buttonPress(XButtonEvent & event);
+    void buttonRelease(XButtonEvent & event);
+    void expose(XExposeEvent & event);
+    void configure(XConfigureEvent & event);
+
+protected:
+    I_X_Window()          {}
+    virtual ~I_X_Window() {}
+};
+*/
+
 class X_Window :
     protected Terminal::IObserver,
     protected Uncopyable
@@ -32,6 +50,7 @@ class X_Window :
 
 public:
     X_Window(Display            * display,
+             Window               parent,
              Screen             * screen,
              X_ColorSet         & colorSet,
              X_FontSet          & fontSet,
@@ -44,7 +63,7 @@ public:
     bool isOpen() const { return _terminal->isOpen(); }
     int getFd() { return _terminal->getFd(); }
     void read() { _terminal->read(); }
-    bool isQueueEmpty() const { return _terminal->isQueueEmpty(); }
+    bool isWritePending() const { return _terminal->isWritePending(); }
     void write() { _terminal->write(); }
 
     // Events:

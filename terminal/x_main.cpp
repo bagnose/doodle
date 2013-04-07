@@ -36,7 +36,7 @@ protected:
             FD_SET(mWindow.getFd(), &readFds);
             fdMax = std::max(fdMax, mWindow.getFd());
 
-            bool selectOnWrite = !mWindow.isQueueEmpty();
+            bool selectOnWrite = mWindow.isWritePending();
             if (selectOnWrite) {
                 FD_SET(mWindow.getFd(), &writeFds);
                 fdMax = std::max(fdMax, mWindow.getFd());
@@ -160,11 +160,12 @@ int main(int argc, char * argv[]) {
     Visual  * visual   = XDefaultVisualOfScreen(screen);
     ASSERT(visual,);
     Colormap  colormap = XDefaultColormapOfScreen(screen);
+    Window    root     = XRootWindowOfScreen(screen);
 
     {
         X_ColorSet      colorSet(display, visual, colormap);
         X_FontSet       fontSet(display, fontName);
-        X_Window        window(display, screen, colorSet, fontSet, command);
+        X_Window        window(display, root, screen, colorSet, fontSet, command);
         SimpleEventLoop eventLoop(display, window);
     }
 

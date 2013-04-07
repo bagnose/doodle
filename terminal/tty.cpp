@@ -101,7 +101,7 @@ void Tty::read() {
     }
 }
 
-void Tty::enqueue(const char * data, size_t size) {
+void Tty::enqueueWrite(const char * data, size_t size) {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
 
@@ -112,16 +112,16 @@ void Tty::enqueue(const char * data, size_t size) {
     }
 }
 
-bool Tty::isQueueEmpty() const {
+bool Tty::isWritePending() const {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
-    return mWriteBuffer.empty();
+    return !mWriteBuffer.empty();
 }
 
 void Tty::write() {
     ASSERT(!mDispatch,);
     ASSERT(isOpen(), "Not open.");
-    ASSERT(!isQueueEmpty(), "No writes queued.");
+    ASSERT(isWritePending(), "No writes queued.");
     ASSERT(!mDumpWrites, "Dump writes is set.");
 
     ssize_t rval = ::write(mFd, static_cast<const void *>(&mWriteBuffer.front()),

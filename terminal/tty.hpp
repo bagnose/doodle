@@ -96,10 +96,10 @@ public:
     void read();
 
     // Queue data for write.
-    void enqueue(const char * data, size_t size);
+    void enqueueWrite(const char * data, size_t size);
 
     // Is there data queued for write?
-    bool isQueueEmpty() const;
+    bool isWritePending() const;
 
     // Call when will not block (after select()).
     void write();
