@@ -4,7 +4,7 @@ Features:
 
 - Scrollback (option for infinite)
 
-- Scroll history de-dupe across terminals.
+- Scroll history de-dupe across terminal instances.
 
 - Architect for tabs
 
@@ -22,7 +22,7 @@ Features:
 
 - Block select
 
-- Hide cursor when typing.
+- Hide pointer when typing.
 
 Decisions:
 
@@ -30,7 +30,23 @@ Decisions:
 
 - Extension language: lua? python?
 
-Notes:
+- Backing store
+
+  - None: Lowest memory usage. Flickery during redraw / updates.
+
+  - Per terminal, always: Least flicker, highest memory usage.
+
+  - Per terminal, while mapped: Less memory usage, greater delay on re-map.
+
+  - Shared. Store is size of largest dimensions of all terminals.
+
+    - Just used to eliminate flicker of update - not used for scrolling.
+
+    - Used more extensively, e.g., use for scrolling if still valid for
+      current terminal, etc.
+      This is the most complex to implement.
+
+Note:
 
 - How to have a test-suite?
 

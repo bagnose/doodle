@@ -32,8 +32,8 @@ X_Window::X_Window(Display            * display,
     uint16_t rows = 25;
     uint16_t cols = 80;
 
-    uint16_t width  = 2 * BORDER_THICKNESS + cols * _fontSet.width() + SCROLLBAR_WIDTH;
-    uint16_t height = 2 * BORDER_THICKNESS + rows * _fontSet.height();
+    uint16_t width  = 2 * BORDER_THICKNESS + cols * _fontSet.getWidth() + SCROLLBAR_WIDTH;
+    uint16_t height = 2 * BORDER_THICKNESS + rows * _fontSet.getHeight();
 
     _window = XCreateWindow(_display,
                             XRootWindowOfScreen(_screen),
@@ -69,7 +69,7 @@ X_Window::~X_Window() {
 
 void X_Window::keyPress(XKeyEvent & event) {
     uint8_t  state   = event.state;
-    uint16_t keycode = event.keycode;
+    //uint16_t keycode = event.keycode;
 
     std::ostringstream maskStr;
     if (state & ShiftMask)   maskStr << " SHIFT";
@@ -131,14 +131,14 @@ void X_Window::configure(XConfigureEvent & event) {
 
     uint16_t rows, cols;
 
-    if (_width  > 2 * BORDER_THICKNESS + _fontSet.width() + SCROLLBAR_WIDTH &&
-        _height > 2 * BORDER_THICKNESS + _fontSet.height())
+    if (_width  > 2 * BORDER_THICKNESS + _fontSet.getWidth() + SCROLLBAR_WIDTH &&
+        _height > 2 * BORDER_THICKNESS + _fontSet.getHeight())
     {
         uint16_t w = _width  - (2 * BORDER_THICKNESS + SCROLLBAR_WIDTH);
         uint16_t h = _height - (2 * BORDER_THICKNESS);
 
-        rows = h / _fontSet.height();
-        cols = w / _fontSet.width();
+        rows = h / _fontSet.getHeight();
+        cols = w / _fontSet.getWidth();
     }
     else {
         rows = cols = 1;
@@ -152,9 +152,9 @@ void X_Window::configure(XConfigureEvent & event) {
 }
 
 void X_Window::rowCol2XY(uint16_t col, size_t row,
-                       uint16_t & x, uint16_t & y) const {
-    x = BORDER_THICKNESS + col * _fontSet.width();
-    y = BORDER_THICKNESS + (row + 1) * _fontSet.height();
+                         uint16_t & x, uint16_t & y) const {
+    x = BORDER_THICKNESS + col * _fontSet.getWidth();
+    y = BORDER_THICKNESS + (row + 1) * _fontSet.getHeight();
 }
 
 void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
@@ -164,18 +164,6 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                                       XDefaultVisualOfScreen(_screen),
                                       XDefaultColormapOfScreen(_screen));
 
-    XftColor     xftColor;
-    XRenderColor xrColor;
-
-    xrColor.red   = 0x7777;
-    xrColor.green = 0xaaaa;
-    xrColor.blue  = 0xffff;
-    xrColor.alpha = 0xffff;
-    XftColorAllocValue(_display,
-                       XDefaultVisualOfScreen(_screen),
-                       XDefaultColormapOfScreen(_screen),
-                       &xrColor, &xftColor);
-
     for (size_t r = 0; r != _terminal->buffer().getRows(); ++r) {
         for (size_t c = 0; c != _terminal->buffer().getCols(); ++c) {
             uint16_t x, y;
@@ -183,43 +171,34 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
 
             const Char & ch = _terminal->buffer().getChar(r, c);
 
-            const XftColor & fgColor = _colorSet.getIndexedColor(ch.fg);
+            /*
+            if (ch.bytes[0] != ' ') {
+                PRINT(<<ch);
+            }
+            */
+
+            const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg);
+            XftFont * font = _fontSet.get(ch.attr & (1 << Tty::ATTRIBUTE_BOLD),
+                                          ch.attr & (1 << Tty::ATTRIBUTE_ITALIC));
 
             XftDrawStringUtf8(xftDraw,
-                              &fgColor,
-                              _fontSet.normal(), x, y,
+                              fgColor,
+                              font,
+                              x, y,
                               reinterpret_cast<const FcChar8 *>(ch.bytes),
                               utf8::leadLength(ch.bytes[0]));
-            x += _fontSet.width();
+            x += _fontSet.getWidth();
         }
     }
-
-    XftColorFree(_display, XDefaultVisualOfScreen(_screen),
-                 XDefaultColormapOfScreen(_screen),
-                 &xftColor);
-
-#if 1
-    xrColor.red   = 0xffff;
-    xrColor.green = 0xaaaa;
-    xrColor.blue  = 0xaaaa;
-    xrColor.alpha = 0xffff;
-    XftColorAllocValue(_display,
-                       XDefaultVisualOfScreen(_screen),
-                       XDefaultColormapOfScreen(_screen),
-                       &xrColor, &xftColor);
 
     {
         uint16_t x, y;
         rowCol2XY(_terminal->cursorCol(), _terminal->cursorRow(), x, y);
-        XftDrawStringUtf8(xftDraw, &xftColor,
-                          _fontSet.normal(), x, y,
+        XftDrawStringUtf8(xftDraw,
+                          _colorSet.getCursorColor(),
+                          _fontSet.getNormal(), x, y,
                           (const FcChar8 *)"¶", 2);
     }
-
-    XftColorFree(_display, XDefaultVisualOfScreen(_screen),
-                 XDefaultColormapOfScreen(_screen),
-                 &xftColor);
-#endif
 
     XftDrawDestroy(xftDraw);
 

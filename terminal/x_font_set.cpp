@@ -6,9 +6,9 @@ X_FontSet::X_FontSet(Display           * display,
                      const std::string & fontName) :
     mDisplay(display),
     mNormal(nullptr),
+    mBold(nullptr),
     mItalic(nullptr),
     mItalicBold(nullptr),
-    mBold(nullptr),
     mWidth(0),
     mHeight(0)
 {
@@ -23,7 +23,13 @@ X_FontSet::X_FontSet(Display           * display,
     // Normal
     mNormal = load(pattern);
 
+    // Bold
+    FcPatternDel(pattern, FC_WEIGHT);
+    FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
+    mBold = load(pattern);
+
     // Italic
+    FcPatternDel(pattern, FC_WEIGHT);
     FcPatternDel(pattern, FC_SLANT);
     FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC);
     mItalic = load(pattern);
@@ -33,18 +39,13 @@ X_FontSet::X_FontSet(Display           * display,
     FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
     mItalicBold = load(pattern);
 
-    // Bold
-    FcPatternDel(pattern, FC_SLANT);
-    FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN);
-    mBold = load(pattern);
-
     FcPatternDestroy(pattern);
 }
 
 X_FontSet::~X_FontSet() {
-    unload(mBold);
     unload(mItalicBold);
     unload(mItalic);
+    unload(mBold);
     unload(mNormal);
 }
 

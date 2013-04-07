@@ -24,8 +24,11 @@ public:
 
     ~X_ColorSet();
 
-    const XftColor & getIndexedColor(uint8_t index) const { return _indexedColors[index]; }
-    const XftColor & getCursorColor() const { return _cursorColor; }
+    const XftColor * getIndexedColor(uint8_t index) const {
+        return &_indexedColors[index];
+    }
+
+    const XftColor * getCursorColor() const { return &_cursorColor; }
 };
 
 #endif // X_COLOR_SET__H

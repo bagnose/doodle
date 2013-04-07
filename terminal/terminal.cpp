@@ -12,20 +12,29 @@ Terminal::Terminal(IObserver          & observer,
     _buffer(rows, cols),
     _cursorRow(0),
     _cursorCol(0),
-    _bg(0),
-    _fg(7),
+    _bg(Tty::defaultBg()),
+    _fg(Tty::defaultFg()),
     _tty(*this,
          rows, cols,
          windowId,
          term,
          command)
-{}
+{
+    _tabs.resize(cols);
+    for (size_t i = 0; i != _tabs.size(); ++i) {
+        _tabs[i] = (i + 1) % Tty::defaultTab() == 0;
+    }
+}
 
 Terminal::~Terminal() {}
 
 void Terminal::resize(uint16_t rows, uint16_t cols) {
     _buffer.resize(rows, cols);
     _tty.resize(rows, cols);
+    _tabs.resize(cols);
+    for (size_t i = 0; i != _tabs.size(); ++i) {
+        _tabs[i] = (i + 1) % Tty::defaultTab() == 0;
+    }
 }
 
 // Tty::IObserver implementation:
@@ -40,6 +49,11 @@ void Terminal::ttyControl(Tty::Control control) throw () {
         case Tty::CONTROL_BEL:
             break;
         case Tty::CONTROL_HT:
+            for (; _cursorCol != _buffer.getCols(); ++_cursorCol) {
+                if (_tabs[_cursorCol]) {
+                    break;
+                }
+            }
             break;
         case Tty::CONTROL_BS:
             _buffer.eraseChar(_cursorRow, --_cursorCol);
@@ -90,18 +104,25 @@ void Terminal::ttySetBg(uint8_t bg) throw () {
     _bg = bg;
 }
 
-void Terminal::ttyResetAttributes() throw () {
+void Terminal::ttyClearAttributes() throw () {
+    PRINT("Clearing attributes");
+    _attributes = 0;
 }
 
-void Terminal::ttyEnableAttribute(Tty::Attribute atttribute) throw () {
+void Terminal::ttyEnableAttribute(Tty::Attribute attribute) throw () {
+    PRINT("Enabling attribute: " << attribute);
+    _attributes |= 1 << attribute;
 }
 
-void Terminal::ttyDisableAttribute(Tty::Attribute atttribute) throw () {
+void Terminal::ttyDisableAttribute(Tty::Attribute attribute) throw () {
+    PRINT("Disabling attribute: " << attribute);
+    _attributes &= ~(1 << attribute);
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
     //PRINT("UTF-8: '" << std::string(s, s + length) << "'");
-    _buffer.insertChar(Char::utf8(s, length, _fg, _bg), _cursorRow, _cursorCol);
+    _buffer.insertChar(Char::utf8(s, length, _attributes, 0, _fg, _bg),
+                       _cursorRow, _cursorCol);
     ++_cursorCol;
 
     if (_cursorCol == _buffer.getCols()) {

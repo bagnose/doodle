@@ -13,30 +13,30 @@
 
 namespace {
 
-    std::string strArgs(const std::vector<int32_t> & args) {
-        std::ostringstream str;
-        bool first = true;
-        for (auto a : args) {
-            if (first) { first = false; }
-            else       { str << " "; }
-            str << a;
-        }
-        return str.str();
+std::string strArgs(const std::vector<int32_t> & args) {
+    std::ostringstream str;
+    bool first = true;
+    for (auto a : args) {
+        if (first) { first = false; }
+        else       { str << " "; }
+        str << a;
     }
+    return str.str();
+}
 
-    int32_t nthArg(const std::vector<int32_t> & args, size_t n) {
-        ASSERT(n < args.size(),);
+int32_t nthArg(const std::vector<int32_t> & args, size_t n) {
+    ASSERT(n < args.size(),);
+    return args[n];
+}
+
+int32_t nthArgFallback(const std::vector<int32_t> & args, size_t n, int32_t fallback) {
+    if (n < args.size()) {
         return args[n];
     }
-
-    int32_t nthArgFallback(const std::vector<int32_t> & args, size_t n, int32_t fallback) {
-        if (n < args.size()) {
-            return args[n];
-        }
-        else {
-            return fallback;
-        }
+    else {
+        return fallback;
     }
+}
 
 } // namespace {anonymous}
 
@@ -499,9 +499,9 @@ void Tty::processBlah(const std::vector<int32_t> & args) {
 
         switch (v) {
             case 0:
-                mObserver.ttySetFg(7);
-                mObserver.ttySetBg(0);
-                mObserver.ttyResetAttributes();
+                mObserver.ttySetBg(defaultBg());
+                mObserver.ttySetFg(defaultFg());
+                mObserver.ttyClearAttributes();
                 break;
             case 1:
                 mObserver.ttyEnableAttribute(ATTRIBUTE_BOLD);
@@ -537,15 +537,40 @@ void Tty::processBlah(const std::vector<int32_t> & args) {
                 mObserver.ttyDisableAttribute(ATTRIBUTE_REVERSE);
                 break;
             case 38:
+                if (i + 2 < args.size() && args[i + 1] == 5) {
+                    i += 2;
+                    int32_t v2 = args[i];
+                    if (v2 >= 0 && v2 < 256) {
+                        mObserver.ttySetFg(v2);
+                    }
+                    else {
+                        ERROR("Colour out of range: " << v2);
+                    }
+                }
+                else {
+                    ERROR("XXX");
+                }
                 break;
             case 39:
-                mObserver.ttySetFg(7);
+                mObserver.ttySetFg(defaultFg());
                 break;
             case 48:
-                // TODO
+                if (i + 2 < args.size() && args[i + 1] == 5) {
+                    i += 2;
+                    int32_t v2 = args[i];
+                    if (v2 >= 0 && v2 < 256) {
+                        mObserver.ttySetBg(v2);
+                    }
+                    else {
+                        ERROR("Colour out of range: " << v2);
+                    }
+                }
+                else {
+                    ERROR("XXX");
+                }
                 break;
             case 49:
-                mObserver.ttySetBg(0);
+                mObserver.ttySetBg(defaultBg());
                 break;
             default:
                 if (v >= 30 && v < 38) {
@@ -624,24 +649,49 @@ int Tty::close() {
     waitReap(exitCode);
 }
 
+std::ostream & operator << (std::ostream & ost, Tty::Attribute attribute) {
+    switch (attribute) {
+        case Tty::ATTRIBUTE_BOLD:
+            return ost << "BOLD";
+        case Tty::ATTRIBUTE_ITALIC:
+            return ost << "ITALIC";
+        case Tty::ATTRIBUTE_UNDERLINE:
+            return ost << "UNDERLINE";
+        case Tty::ATTRIBUTE_BLINK:
+            return ost << "BLINK";
+        case Tty::ATTRIBUTE_REVERSE:
+            return ost << "REVERSE";
+    }
+
+    FATAL(<< static_cast<int>(attribute));
+}
+
 std::ostream & operator << (std::ostream & ost, Tty::Control control) {
     switch (control) {
         case Tty::CONTROL_BEL:
-            ost << "BEL";
-            break;
+            return ost << "BEL";
         case Tty::CONTROL_HT:
-            ost << "HT";
-            break;
+            return ost << "HT";
         case Tty::CONTROL_BS:
-            ost << "BS";
-            break;
+            return ost << "BS";
         case Tty::CONTROL_CR:
-            ost << "CR";
-            break;
+            return ost << "CR";
         case Tty::CONTROL_LF:
-            ost << "LF";
-            break;
+            return ost << "LF";
     }
 
-    return ost;
+    FATAL(<< static_cast<int>(control));
+}
+
+std::ostream & operator << (std::ostream & ost, Tty::Clear clear) {
+    switch (clear) {
+        case Tty::CLEAR_BELOW:
+            return ost << "BELOW";
+        case Tty::CLEAR_ABOVE:
+            return ost << "ABOVE";
+        case Tty::CLEAR_ALL:
+            return ost << "ALL";
+    }
+
+    FATAL(<< static_cast<int>(clear));
 }

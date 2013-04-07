@@ -40,7 +40,6 @@ X_ColorSet::X_ColorSet(Display  * display,
     _indexedColors(),
     _cursorColor()
 {
-
     // 0..7     normal colors
     // 8..15    bright colors
     // 16..231  6x6x6 color cube
@@ -65,7 +64,8 @@ X_ColorSet::X_ColorSet(Display  * display,
                 XftColorAllocValue(_display,
                                    _visual,
                                    _colormap,
-                                   &xrColor, &_indexedColors[index]);
+                                   &xrColor,
+                                   &_indexedColors[index]);
             }
         }
         ++index;
@@ -78,8 +78,26 @@ X_ColorSet::X_ColorSet(Display  * display,
         XftColorAllocValue(_display,
                            _visual,
                            _colormap,
-                           &xrColor, &_indexedColors[index]);
+                           &xrColor,
+                           &_indexedColors[index]);
         ++index;
+    }
+
+    //
+    //
+    //
+
+    {
+        XRenderColor  xrColor;
+        xrColor.red   = 0xffff;
+        xrColor.green = 0;
+        xrColor.blue  = 0;
+        xrColor.alpha = 0xffff;
+        XftColorAllocValue(_display,
+                           _visual,
+                           _colormap,
+                           &xrColor,
+                           &_cursorColor);
     }
 }
 

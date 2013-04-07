@@ -46,9 +46,9 @@ public:
         virtual void ttyClear(Clear clear) throw () = 0;
         virtual void ttySetFg(uint8_t fg) throw () = 0;
         virtual void ttySetBg(uint8_t bg) throw () = 0;
-        virtual void ttyResetAttributes() throw () = 0;
-        virtual void ttyEnableAttribute(Attribute atttribute) throw () = 0;
-        virtual void ttyDisableAttribute(Attribute atttribute) throw () = 0;
+        virtual void ttyClearAttributes() throw () = 0;
+        virtual void ttyEnableAttribute(Attribute attribute) throw () = 0;
+        virtual void ttyDisableAttribute(Attribute attribute) throw () = 0;
         // UTF-8
         virtual void ttyUtf8(const char * s, utf8::Length length) throw () = 0;
         // end
@@ -81,6 +81,10 @@ private:
     std::vector<char>   mWriteBuffer;
 
 public:
+    static uint8_t  defaultBg()  { return 0; }
+    static uint8_t  defaultFg()  { return 7; }
+    static uint16_t defaultTab() { return 8; }
+
     Tty(IObserver         & observer,
         uint16_t            rows,
         uint16_t            cols,
@@ -136,6 +140,8 @@ protected:
     int  close();
 };
 
-std::ostream & operator << (std::ostream & ost, Tty::Control control);
+std::ostream & operator << (std::ostream & ost, Tty::Attribute attribute);
+std::ostream & operator << (std::ostream & ost, Tty::Control   control);
+std::ostream & operator << (std::ostream & ost, Tty::Clear     clear);
 
 #endif // TTY__HPP

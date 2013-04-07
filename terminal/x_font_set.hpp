@@ -11,9 +11,9 @@
 class X_FontSet : protected Uncopyable {
     Display * mDisplay;
     XftFont * mNormal;
+    XftFont * mBold;
     XftFont * mItalic;
     XftFont * mItalicBold;
-    XftFont * mBold;
     uint16_t  mWidth, mHeight;
 
 public:
@@ -24,15 +24,24 @@ public:
 
     // Font accessors:
 
-    XftFont * normal()     { return mNormal; }
-    XftFont * italic()     { return mItalic; }
-    XftFont * italicBold() { return mItalicBold; }
-    XftFont * bold()       { return mBold; }
+    XftFont * get(bool bold, bool italic) {
+        switch ((bold ? 1 : 0) + (italic ? 2 : 0)) {
+            case 0: return getNormal();
+            case 1: return getBold();
+            case 2: return getItalic();
+            case 3: return getItalicBold();
+        }
+    }
+
+    XftFont * getNormal()     { return mNormal; }
+    XftFont * getBold()       { return mBold; }
+    XftFont * getItalic()     { return mItalic; }
+    XftFont * getItalicBold() { return mItalicBold; }
 
     // Misc:
 
-    uint16_t width()  const { return mWidth; }
-    uint16_t height() const { return mHeight; }
+    uint16_t getWidth()  const { return mWidth; }
+    uint16_t getHeight() const { return mHeight; }
 
 protected:
     XftFont * load(FcPattern * pattern);

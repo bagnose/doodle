@@ -6,6 +6,8 @@
 #include "terminal/tty.hpp"
 #include "terminal/simple_buffer.hpp"
 
+#include <vector>
+
 class Terminal : protected Tty::IObserver {
 public:
     class IObserver {
@@ -22,13 +24,15 @@ public:
     };
 
 private:
-    IObserver     & _observer;
-    SimpleBuffer    _buffer;
-    uint16_t        _cursorRow;
-    uint16_t        _cursorCol;
-    uint8_t         _bg;
-    uint8_t         _fg;
-    Tty             _tty;
+    IObserver         & _observer;
+    SimpleBuffer        _buffer;
+    uint16_t            _cursorRow;
+    uint16_t            _cursorCol;
+    uint8_t             _bg;
+    uint8_t             _fg;
+    uint8_t             _attributes;
+    std::vector<bool>   _tabs;
+    Tty                 _tty;
 
 public:
     Terminal(IObserver          & observer,
@@ -64,9 +68,9 @@ protected:
     void ttyClear(Tty::Clear clear) throw ();
     void ttySetFg(uint8_t fg) throw ();
     void ttySetBg(uint8_t bg) throw ();
-    void ttyResetAttributes() throw ();
-    void ttyEnableAttribute(Tty::Attribute atttribute) throw ();
-    void ttyDisableAttribute(Tty::Attribute atttribute) throw ();
+    void ttyClearAttributes() throw ();
+    void ttyEnableAttribute(Tty::Attribute attribute) throw ();
+    void ttyDisableAttribute(Tty::Attribute attribute) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 
