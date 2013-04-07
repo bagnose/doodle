@@ -32,6 +32,7 @@ public:
             case 2: return getItalic();
             case 3: return getItalicBold();
         }
+        FATAL("Unreachable");
     }
 
     XftFont * getNormal()     { return _normal; }

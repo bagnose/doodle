@@ -55,12 +55,9 @@ XftFont * X_FontSet::load(FcPattern * pattern, bool master) {
     FcPattern * match = FcFontMatch(nullptr, pattern, &result);
     ENFORCE(match,);
 
+    // Note, the match will be free'd when the font is closed.
     XftFont * font = XftFontOpenPattern(_display, match);
     ENFORCE(font,);
-
-    // XXX the match is supposed to be associated with the font
-    // and free'd during XftFontClose().
-    //FcPatternDestroy(match);
 
     _width  = std::max(_width, static_cast<uint16_t>(font->max_advance_width));
     _height = std::max(_width, static_cast<uint16_t>(font->height));
@@ -73,6 +70,5 @@ XftFont * X_FontSet::load(FcPattern * pattern, bool master) {
 }
 
 void X_FontSet::unload(XftFont * font) {
-    // XXX causes SEGV
-    //XftFontClose(_display, font);
+    XftFontClose(_display, font);
 }

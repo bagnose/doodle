@@ -13,26 +13,19 @@
 
 class SimpleEventLoop : protected Uncopyable {
     Display  * mDisplay;
-    X_Window * mWindow;
+    X_Window & mWindow;
 public:
-    SimpleEventLoop(Display            * display,
-                    Screen             * screen,
-                    X_ColorSet         & colorSet,
-                    X_FontSet          & fontSet,
-                    const Tty::Command & command) :
+    SimpleEventLoop(Display   * display,
+                    X_Window  & window) :
         mDisplay(display),
-        mWindow(new X_Window(mDisplay, screen, colorSet, fontSet, command))
+        mWindow(window)
     {
         loop();
     }
 
-    ~SimpleEventLoop() {
-        delete mWindow;
-    }
-
 protected:
     void loop() {
-        while (mWindow->isOpen()) {
+        while (mWindow.isOpen()) {
             int fdMax = 0;
             fd_set readFds, writeFds;
             FD_ZERO(&readFds); FD_ZERO(&writeFds);
@@ -40,13 +33,13 @@ protected:
             FD_SET(XConnectionNumber(mDisplay), &readFds);
             fdMax = std::max(fdMax, XConnectionNumber(mDisplay));
 
-            FD_SET(mWindow->getFd(), &readFds);
-            fdMax = std::max(fdMax, mWindow->getFd());
+            FD_SET(mWindow.getFd(), &readFds);
+            fdMax = std::max(fdMax, mWindow.getFd());
 
-            bool selectOnWrite = !mWindow->isQueueEmpty();
+            bool selectOnWrite = !mWindow.isQueueEmpty();
             if (selectOnWrite) {
-                FD_SET(mWindow->getFd(), &writeFds);
-                fdMax = std::max(fdMax, mWindow->getFd());
+                FD_SET(mWindow.getFd(), &writeFds);
+                fdMax = std::max(fdMax, mWindow.getFd());
             }
 
             ENFORCE_SYS(::select(fdMax + 1, &readFds, &writeFds, nullptr,
@@ -58,13 +51,13 @@ protected:
                 //PRINT("xevent");
                 xevent();
             }
-            else if (FD_ISSET(mWindow->getFd(), &readFds)) {
+            else if (FD_ISSET(mWindow.getFd(), &readFds)) {
                 //PRINT("window read event");
-                mWindow->read();
+                mWindow.read();
             }
-            else if (selectOnWrite && FD_ISSET(mWindow->getFd(), &writeFds)) {
+            else if (selectOnWrite && FD_ISSET(mWindow.getFd(), &writeFds)) {
                 //PRINT("window write event");
-                mWindow->write();
+                mWindow.write();
             }
         }
     }
@@ -76,22 +69,22 @@ protected:
 
             switch (event.type) {
                 case KeyPress:
-                    mWindow->keyPress(event.xkey);
+                    mWindow.keyPress(event.xkey);
                     break;
                 case KeyRelease:
-                    mWindow->keyRelease(event.xkey);
+                    mWindow.keyRelease(event.xkey);
                     break;
                 case ButtonPress:
-                    mWindow->buttonPress(event.xbutton);
+                    mWindow.buttonPress(event.xbutton);
                     break;
                 case ButtonRelease:
-                    mWindow->buttonRelease(event.xbutton);
+                    mWindow.buttonRelease(event.xbutton);
                     break;
                 case Expose:
-                    mWindow->expose(event.xexpose);
+                    mWindow.expose(event.xexpose);
                     break;
                 case ConfigureNotify:
-                    mWindow->configure(event.xconfigure);
+                    mWindow.configure(event.xconfigure);
                     break;
                 default:
                     //PRINT("Unrecognised event: " << event.type);
@@ -160,23 +153,24 @@ int main(int argc, char * argv[]) {
 
     FcInit();
 
-    Display * display = XOpenDisplay(nullptr);
+    Display * display  = XOpenDisplay(nullptr);
     ENFORCE(display, "Failed to open display.");
-    Screen * screen = XDefaultScreenOfDisplay(display);
+    Screen  * screen   = XDefaultScreenOfDisplay(display);
     ASSERT(screen,);
-    Visual * visual = XDefaultVisualOfScreen(screen);
+    Visual  * visual   = XDefaultVisualOfScreen(screen);
     ASSERT(visual,);
-    Colormap colormap = XDefaultColormapOfScreen(screen);
+    Colormap  colormap = XDefaultColormapOfScreen(screen);
 
-    X_ColorSet colorSet(display, visual, colormap);
-    X_FontSet  fontSet(display, fontName);
-
-    SimpleEventLoop eventLoop(display, screen, colorSet, fontSet, command);
+    {
+        X_ColorSet      colorSet(display, visual, colormap);
+        X_FontSet       fontSet(display, fontName);
+        X_Window        window(display, screen, colorSet, fontSet, command);
+        SimpleEventLoop eventLoop(display, window);
+    }
 
     XCloseDisplay(display);
 
-    // XXX The following causes an assertion failure.
-    //FcFini();
+    FcFini();
 
     return 0;
 }
