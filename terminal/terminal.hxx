@@ -3,8 +3,8 @@
 #ifndef TERMINAL__HPP
 #define TERMINAL__HPP
 
-#include "terminal/tty.hpp"
-#include "terminal/simple_buffer.hpp"
+#include "terminal/tty.hxx"
+#include "terminal/simple_buffer.hxx"
 
 #include <vector>
 

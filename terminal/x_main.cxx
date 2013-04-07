@@ -1,9 +1,9 @@
 // vi:noai:sw=4
 
-#include "terminal/common.hpp"
-#include "terminal/x_window.hpp"
-#include "terminal/x_color_set.hpp"
-#include "terminal/x_font_set.hpp"
+#include "terminal/common.hxx"
+#include "terminal/x_window.hxx"
+#include "terminal/x_color_set.hxx"
+#include "terminal/x_font_set.hxx"
 
 #include <string>
 

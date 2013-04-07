@@ -1,6 +1,6 @@
 // vi:noai:sw=4
 
-#include "terminal/terminal.hpp"
+#include "terminal/terminal.hxx"
 
 Terminal::Terminal(IObserver          & observer,
                    uint16_t             rows,

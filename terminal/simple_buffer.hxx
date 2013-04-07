@@ -3,8 +3,8 @@
 #ifndef SIMPLE_BUFFER__H
 #define SIMPLE_BUFFER__H
 
-#include "terminal/common.hpp"
-#include "terminal/char.hpp"
+#include "terminal/common.hxx"
+#include "terminal/char.hxx"
 
 #include <vector>
 #include <deque>

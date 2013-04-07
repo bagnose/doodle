@@ -3,7 +3,7 @@
 #ifndef X_COLOR_SET__H
 #define X_COLOR_SET__H
 
-#include "terminal/common.hpp"
+#include "terminal/common.hxx"
 
 #include <vector>
 

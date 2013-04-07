@@ -1,4 +1,4 @@
-#include "terminal/common.hpp"
+#include "terminal/common.hxx"
 #define HAVE_XFT
 
 #include <stdlib.h>

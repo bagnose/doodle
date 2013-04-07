@@ -3,9 +3,9 @@
 #ifndef TTY__HPP
 #define TTY__HPP
 
-#include "terminal/attributes.hpp"
-#include "terminal/utf8.hpp"
-#include "terminal/common.hpp"
+#include "terminal/attributes.hxx"
+#include "terminal/utf8.hxx"
+#include "terminal/common.hxx"
 
 #include <vector>
 #include <string>

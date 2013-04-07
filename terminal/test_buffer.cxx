@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#include "terminal/buffer.hpp"
-#include "terminal/common.hpp"
+#include "terminal/buffer.hxx"
+#include "terminal/common.hxx"
 
 void testRawBuffer() {
     size_t size = 4;

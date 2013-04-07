@@ -2,28 +2,28 @@ refer misc ;
 
 dist-exe query
   :
-  query.cpp
+  query.cxx
   ;
 
 static-lib common
   :
-  common.hpp utf8.hpp tty.hpp buffer.hpp terminal.hpp
-  attributes.hpp char.hpp simple_buffer.hpp
+  common.hxx utf8.hxx tty.hxx buffer.hxx terminal.hxx
+  attributes.hxx char.hxx simple_buffer.hxx
   :
-  common.cpp utf8.cpp tty.cpp buffer.cpp terminal.cpp
-  attributes.cpp char.cpp simple_buffer.cpp
+  common.cxx utf8.cxx tty.cxx buffer.cxx terminal.cxx
+  attributes.cxx char.cxx simple_buffer.cxx
   ;
 
-test-exe test-utf8   : test_utf8.cpp;
-test-exe test-buffer : test_buffer.cpp;
+test-exe test-utf8   : test_utf8.cxx;
+test-exe test-buffer : test_buffer.cxx;
 
 static-lib xlib
   :
-  x_window.hpp x_font_set.hpp x_color_set.hpp x_window_interface.hpp
+  x_window.hxx x_font_set.hxx x_color_set.hxx x_window_interface.hxx
   :
-  x_window.cpp x_font_set.cpp x_color_set.cpp
+  x_window.cxx x_font_set.cxx x_color_set.cxx
   ;
 
-dist-exe terminal : x_main.cpp ;
+dist-exe terminal : x_main.cxx ;
 
-dist-exe web1 : web1.cpp ;
+dist-exe web1 : web1.cxx ;

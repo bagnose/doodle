@@ -1,6 +1,6 @@
 // vi:noai:sw=4
 
-#include "terminal/x_font_set.hpp"
+#include "terminal/x_font_set.hxx"
 
 X_FontSet::X_FontSet(Display           * display,
                      const std::string & fontName) :

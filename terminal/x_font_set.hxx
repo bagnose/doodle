@@ -3,7 +3,7 @@
 #ifndef X_FONT_SET__HPP
 #define X_FONT_SET__HPP
 
-#include "terminal/common.hpp"
+#include "terminal/common.hxx"
 
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>

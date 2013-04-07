@@ -3,10 +3,10 @@
 #ifndef X_WINDOW__HPP
 #define X_WINDOW__HPP
 
-#include "terminal/x_window_interface.hpp"
-#include "terminal/x_color_set.hpp"
-#include "terminal/x_font_set.hpp"
-#include "terminal/terminal.hpp"
+#include "terminal/x_window_interface.hxx"
+#include "terminal/x_color_set.hxx"
+#include "terminal/x_font_set.hxx"
+#include "terminal/terminal.hxx"
 
 #include <vector>
 #include <string>

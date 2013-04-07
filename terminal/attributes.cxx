@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#include "terminal/attributes.hpp"
-#include "terminal/common.hpp"
+#include "terminal/attributes.hxx"
+#include "terminal/common.hxx"
 
 #include <iostream>
 

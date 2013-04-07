@@ -1,6 +1,6 @@
 // vi:noai:sw=4
 
-#include "terminal/x_color_set.hpp"
+#include "terminal/x_color_set.hxx"
 
 namespace {
 

@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#include "terminal/x_window.hpp"
-#include "terminal/common.hpp"
+#include "terminal/x_window.hxx"
+#include "terminal/common.hxx"
 
 #include <sstream>
 

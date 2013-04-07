@@ -1,6 +1,6 @@
 // vi:noai:sw=4
 
-#include "terminal/tty.hpp"
+#include "terminal/tty.hxx"
 
 #include <sstream>
 

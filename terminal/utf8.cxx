@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#include "terminal/utf8.hpp"
-#include "terminal/common.hpp"
+#include "terminal/utf8.hxx"
+#include "terminal/common.hxx"
 
 namespace utf8 {
 

@@ -3,8 +3,8 @@
 #ifndef CHAR__HPP
 #define CHAR__HPP
 
-#include "terminal/attributes.hpp"
-#include "terminal/utf8.hpp"
+#include "terminal/attributes.hxx"
+#include "terminal/utf8.hxx"
 
 #include <algorithm>
 

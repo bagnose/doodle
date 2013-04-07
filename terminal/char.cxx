@@ -1,6 +1,6 @@
 // vi:noai:sw=4
 
-#include "terminal/char.hpp"
+#include "terminal/char.hxx"
 
 #include <iostream>
 
