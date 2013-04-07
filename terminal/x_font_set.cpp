@@ -4,13 +4,14 @@
 
 X_FontSet::X_FontSet(Display           * display,
                      const std::string & fontName) :
-    mDisplay(display),
-    mNormal(nullptr),
-    mBold(nullptr),
-    mItalic(nullptr),
-    mItalicBold(nullptr),
-    mWidth(0),
-    mHeight(0)
+    _display(display),
+    _normal(nullptr),
+    _bold(nullptr),
+    _italic(nullptr),
+    _italicBold(nullptr),
+    _width(0),
+    _height(0),
+    _ascent(0)
 {
     FcPattern * pattern;
 
@@ -21,50 +22,57 @@ X_FontSet::X_FontSet(Display           * display,
     FcDefaultSubstitute(pattern);
 
     // Normal
-    mNormal = load(pattern);
+    _normal = load(pattern, true);
 
     // Bold
     FcPatternDel(pattern, FC_WEIGHT);
     FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
-    mBold = load(pattern);
+    _bold = load(pattern, false);
 
     // Italic
     FcPatternDel(pattern, FC_WEIGHT);
     FcPatternDel(pattern, FC_SLANT);
     FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC);
-    mItalic = load(pattern);
+    _italic = load(pattern, false);
 
     // Italic bold
     FcPatternDel(pattern, FC_WEIGHT);
     FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
-    mItalicBold = load(pattern);
+    _italicBold = load(pattern, false);
 
     FcPatternDestroy(pattern);
 }
 
 X_FontSet::~X_FontSet() {
-    unload(mItalicBold);
-    unload(mItalic);
-    unload(mBold);
-    unload(mNormal);
+    unload(_italicBold);
+    unload(_italic);
+    unload(_bold);
+    unload(_normal);
 }
 
-XftFont * X_FontSet::load(FcPattern * pattern) {
+XftFont * X_FontSet::load(FcPattern * pattern, bool master) {
     FcResult result;
     FcPattern * match = FcFontMatch(nullptr, pattern, &result);
     ENFORCE(match,);
 
-    XftFont * font = XftFontOpenPattern(mDisplay, match);
+    XftFont * font = XftFontOpenPattern(_display, match);
     ENFORCE(font,);
 
-    FcPatternDestroy(match);
+    // XXX the match is supposed to be associated with the font
+    // and free'd during XftFontClose().
+    //FcPatternDestroy(match);
 
-    mWidth  = std::max(mWidth, static_cast<uint16_t>(font->max_advance_width));
-    mHeight = std::max(mWidth, static_cast<uint16_t>(font->height));
+    _width  = std::max(_width, static_cast<uint16_t>(font->max_advance_width));
+    _height = std::max(_width, static_cast<uint16_t>(font->height));
+
+    if (master) {
+        _ascent = font->ascent;
+    }
 
     return font;
 }
 
 void X_FontSet::unload(XftFont * font) {
-    XftFontClose(mDisplay, font);
+    // XXX causes SEGV
+    //XftFontClose(_display, font);
 }

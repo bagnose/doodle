@@ -71,6 +71,7 @@ void X_Window::keyPress(XKeyEvent & event) {
     uint8_t  state   = event.state;
     //uint16_t keycode = event.keycode;
 
+    /*
     std::ostringstream maskStr;
     if (state & ShiftMask)   maskStr << " SHIFT";
     if (state & LockMask)    maskStr << " LOCK";
@@ -80,6 +81,7 @@ void X_Window::keyPress(XKeyEvent & event) {
     if (state & Mod3Mask)    maskStr << " MOD3";
     if (state & Mod4Mask)    maskStr << " WIN";
     if (state & Mod5Mask)    maskStr << " MOD5";
+    */
 
     char   buffer[16];
     KeySym keysym;
@@ -154,7 +156,7 @@ void X_Window::configure(XConfigureEvent & event) {
 void X_Window::rowCol2XY(uint16_t col, size_t row,
                          uint16_t & x, uint16_t & y) const {
     x = BORDER_THICKNESS + col * _fontSet.getWidth();
-    y = BORDER_THICKNESS + (row + 1) * _fontSet.getHeight();
+    y = BORDER_THICKNESS + row * _fontSet.getHeight();
 }
 
 void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
@@ -166,28 +168,37 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
 
     for (size_t r = 0; r != _terminal->buffer().getRows(); ++r) {
         for (size_t c = 0; c != _terminal->buffer().getCols(); ++c) {
-            uint16_t x, y;
-            rowCol2XY(c, r, x, y);
-
             const Char & ch = _terminal->buffer().getChar(r, c);
 
-            /*
-            if (ch.bytes[0] != ' ') {
-                PRINT(<<ch);
+            if (ch.bytes[0] != '\0') {
+                // PRINT(<<ch);
+                uint16_t x, y;
+                rowCol2XY(c, r, x, y);
+
+                const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg);
+                const XftColor * bgColor = _colorSet.getIndexedColor(ch.bg);
+
+                if (ch.attributes.get(ATTRIBUTE_REVERSE)) {
+                    std::swap(fgColor, bgColor);
+                }
+
+                XftFont * font = _fontSet.get(ch.attributes.get(ATTRIBUTE_BOLD),
+                                              ch.attributes.get(ATTRIBUTE_ITALIC));
+
+                XftDrawRect(xftDraw,
+                            bgColor,
+                            x, y,
+                            _fontSet.getWidth(),
+                            _fontSet.getHeight());
+
+                XftDrawStringUtf8(xftDraw,
+                                  fgColor,
+                                  font,
+                                  x,
+                                  y + _fontSet.getAscent(),
+                                  reinterpret_cast<const FcChar8 *>(ch.bytes),
+                                  utf8::leadLength(ch.bytes[0]));
             }
-            */
-
-            const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg);
-            XftFont * font = _fontSet.get(ch.attributes.get(ATTRIBUTE_BOLD),
-                                          ch.attributes.get(ATTRIBUTE_ITALIC));
-
-            XftDrawStringUtf8(xftDraw,
-                              fgColor,
-                              font,
-                              x, y,
-                              reinterpret_cast<const FcChar8 *>(ch.bytes),
-                              utf8::leadLength(ch.bytes[0]));
-            x += _fontSet.getWidth();
         }
     }
 
@@ -196,7 +207,9 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
         rowCol2XY(_terminal->cursorCol(), _terminal->cursorRow(), x, y);
         XftDrawStringUtf8(xftDraw,
                           _colorSet.getCursorColor(),
-                          _fontSet.getNormal(), x, y,
+                          _fontSet.getNormal(),
+                          x,
+                          y + _fontSet.getAscent(),
                           (const FcChar8 *)"¶", 2);
     }
 

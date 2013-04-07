@@ -14,7 +14,7 @@ class SimpleBuffer {
         std::vector<Char> _chars;
 
     public:
-        explicit Line(uint16_t cols) : _chars(cols, Char::ascii(' ')) {}
+        explicit Line(uint16_t cols) : _chars(cols, Char::ascii('\0')) {}
 
         uint16_t getCols() const { return static_cast<uint16_t>(_chars.size()); }
         const Char & getChar(uint16_t col) const { return _chars[col]; }

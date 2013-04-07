@@ -80,7 +80,7 @@ void Tty::read() {
     char buffer[4096];
 
     ssize_t rval = ::read(mFd, static_cast<void *>(buffer), sizeof buffer);
-    PRINT("::read()=" << rval);
+    //PRINT("::read()=" << rval);
 
     if (rval == -1) {
         mObserver.ttyChildExited(close());
@@ -455,7 +455,7 @@ void Tty::processCsiEscape() {
             case 'f': {
                 uint16_t row = nthArgFallback(args, 0, 1) - 1;
                 uint16_t col = nthArgFallback(args, 1, 1) - 1;
-                PRINT("CSI: Move cursor: row=" << row << ", col=" << col);
+                //PRINT("CSI: Move cursor: row=" << row << ", col=" << col);
                 mObserver.ttyMoveCursor(row, col);
             }
                 break;
