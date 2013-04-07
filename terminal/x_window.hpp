@@ -3,35 +3,16 @@
 #ifndef X_WINDOW__HPP
 #define X_WINDOW__HPP
 
-#include "terminal/common.hpp"
-#include "terminal/terminal.hpp"
+#include "terminal/x_window_interface.hpp"
 #include "terminal/x_color_set.hpp"
 #include "terminal/x_font_set.hpp"
+#include "terminal/terminal.hpp"
 
 #include <vector>
 #include <string>
 
-#include <X11/Xlib.h>
-
-/*
-class I_X_Window {
-public:
-    // Events:
-
-    void keyPress(XKeyEvent & event);
-    void keyRelease(XKeyEvent & event);
-    void buttonPress(XButtonEvent & event);
-    void buttonRelease(XButtonEvent & event);
-    void expose(XExposeEvent & event);
-    void configure(XConfigureEvent & event);
-
-protected:
-    I_X_Window()          {}
-    virtual ~I_X_Window() {}
-};
-*/
-
 class X_Window :
+    public I_X_Window,
     protected Terminal::IObserver,
     protected Uncopyable
 {
@@ -56,13 +37,17 @@ public:
              X_FontSet          & fontSet,
              const Tty::Command & command);
 
-    virtual ~X_Window();
+    ~X_Window();
+
+    //
+    // I_X_Window implementation:
+    //
 
     // The following calls are forwarded to the Terminal.
 
     bool isOpen() const { return _terminal->isOpen(); }
-    int getFd() { return _terminal->getFd(); }
-    void read() { _terminal->read(); }
+    int  getFd() { return _terminal->getFd(); }
+    void read()  { _terminal->read(); }
     bool isWritePending() const { return _terminal->isWritePending(); }
     void write() { _terminal->write(); }
 
@@ -76,7 +61,7 @@ public:
     void configure(XConfigureEvent & event);
 
 protected:
-    void rowCol2XY(uint16_t col, size_t row, uint16_t & x, uint16_t & y) const;
+    void rowCol2XY(uint16_t row, size_t col, uint16_t & x, uint16_t & y) const;
 
     void draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih);
 

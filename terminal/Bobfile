@@ -19,7 +19,7 @@ test-exe test-buffer : test_buffer.cpp;
 
 static-lib xlib
   :
-  x_window.hpp x_font_set.hpp x_color_set.hpp
+  x_window.hpp x_font_set.hpp x_color_set.hpp x_window_interface.hpp
   :
   x_window.cpp x_font_set.cpp x_color_set.cpp
   ;

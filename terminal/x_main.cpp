@@ -12,11 +12,11 @@
 #include <X11/Xlib.h>
 
 class SimpleEventLoop : protected Uncopyable {
-    Display  * mDisplay;
-    X_Window & mWindow;
+    Display    * mDisplay;
+    I_X_Window & mWindow;
 public:
-    SimpleEventLoop(Display   * display,
-                    X_Window  & window) :
+    SimpleEventLoop(Display     * display,
+                    I_X_Window  & window) :
         mDisplay(display),
         mWindow(window)
     {
