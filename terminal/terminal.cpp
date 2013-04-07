@@ -43,25 +43,25 @@ void Terminal::ttyBegin() throw () {
     _observer.terminalBegin();
 }
 
-void Terminal::ttyControl(Tty::Control control) throw () {
+void Terminal::ttyControl(Control control) throw () {
     //PRINT("Control: " << control);
     switch (control) {
-        case Tty::CONTROL_BEL:
+        case CONTROL_BEL:
             break;
-        case Tty::CONTROL_HT:
+        case CONTROL_HT:
             for (; _cursorCol != _buffer.getCols(); ++_cursorCol) {
                 if (_tabs[_cursorCol]) {
                     break;
                 }
             }
             break;
-        case Tty::CONTROL_BS:
+        case CONTROL_BS:
             _buffer.eraseChar(_cursorRow, --_cursorCol);
             break;
-        case Tty::CONTROL_CR:
+        case CONTROL_CR:
             _cursorCol = 0;
             break;
-        case Tty::CONTROL_LF:
+        case CONTROL_LF:
             if (_cursorRow == _buffer.getRows() - 1) {
                 _buffer.addLine();
             }
@@ -106,17 +106,17 @@ void Terminal::ttySetBg(uint8_t bg) throw () {
 
 void Terminal::ttyClearAttributes() throw () {
     PRINT("Clearing attributes");
-    _attributes = 0;
+    _attributes.clear();
 }
 
-void Terminal::ttyEnableAttribute(Tty::Attribute attribute) throw () {
+void Terminal::ttyEnableAttribute(Attribute attribute) throw () {
     PRINT("Enabling attribute: " << attribute);
-    _attributes |= 1 << attribute;
+    _attributes.set(attribute);
 }
 
-void Terminal::ttyDisableAttribute(Tty::Attribute attribute) throw () {
+void Terminal::ttyDisableAttribute(Attribute attribute) throw () {
     PRINT("Disabling attribute: " << attribute);
-    _attributes &= ~(1 << attribute);
+    _attributes.unSet(attribute);
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {

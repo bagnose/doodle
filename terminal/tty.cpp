@@ -649,34 +649,17 @@ int Tty::close() {
     waitReap(exitCode);
 }
 
-std::ostream & operator << (std::ostream & ost, Tty::Attribute attribute) {
-    switch (attribute) {
-        case Tty::ATTRIBUTE_BOLD:
-            return ost << "BOLD";
-        case Tty::ATTRIBUTE_ITALIC:
-            return ost << "ITALIC";
-        case Tty::ATTRIBUTE_UNDERLINE:
-            return ost << "UNDERLINE";
-        case Tty::ATTRIBUTE_BLINK:
-            return ost << "BLINK";
-        case Tty::ATTRIBUTE_REVERSE:
-            return ost << "REVERSE";
-    }
-
-    FATAL(<< static_cast<int>(attribute));
-}
-
-std::ostream & operator << (std::ostream & ost, Tty::Control control) {
+std::ostream & operator << (std::ostream & ost, Control control) {
     switch (control) {
-        case Tty::CONTROL_BEL:
+        case CONTROL_BEL:
             return ost << "BEL";
-        case Tty::CONTROL_HT:
+        case CONTROL_HT:
             return ost << "HT";
-        case Tty::CONTROL_BS:
+        case CONTROL_BS:
             return ost << "BS";
-        case Tty::CONTROL_CR:
+        case CONTROL_CR:
             return ost << "CR";
-        case Tty::CONTROL_LF:
+        case CONTROL_LF:
             return ost << "LF";
     }
 

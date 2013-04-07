@@ -3,30 +3,23 @@
 #ifndef TTY__HPP
 #define TTY__HPP
 
-#include "terminal/common.hpp"
+#include "terminal/attributes.hpp"
 #include "terminal/utf8.hpp"
+#include "terminal/common.hpp"
 
 #include <vector>
 #include <string>
 
+enum Control {
+    CONTROL_BEL,
+    CONTROL_HT,
+    CONTROL_BS,
+    CONTROL_CR,
+    CONTROL_LF
+};
+
 class Tty : protected Uncopyable {
 public:
-    enum Attribute {
-        ATTRIBUTE_BOLD,
-        ATTRIBUTE_ITALIC,
-        ATTRIBUTE_UNDERLINE,
-        ATTRIBUTE_BLINK,
-        ATTRIBUTE_REVERSE
-    };
-
-    enum Control {
-        CONTROL_BEL,
-        CONTROL_HT,
-        CONTROL_BS,
-        CONTROL_CR,
-        CONTROL_LF
-    };
-
     enum Clear {
         CLEAR_BELOW,
         CLEAR_ABOVE,
@@ -140,8 +133,7 @@ protected:
     int  close();
 };
 
-std::ostream & operator << (std::ostream & ost, Tty::Attribute attribute);
-std::ostream & operator << (std::ostream & ost, Tty::Control   control);
-std::ostream & operator << (std::ostream & ost, Tty::Clear     clear);
+std::ostream & operator << (std::ostream & ost, Control    control);
+std::ostream & operator << (std::ostream & ost, Tty::Clear clear);
 
 #endif // TTY__HPP

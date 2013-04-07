@@ -178,8 +178,8 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
             */
 
             const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg);
-            XftFont * font = _fontSet.get(ch.attr & (1 << Tty::ATTRIBUTE_BOLD),
-                                          ch.attr & (1 << Tty::ATTRIBUTE_ITALIC));
+            XftFont * font = _fontSet.get(ch.attributes.get(ATTRIBUTE_BOLD),
+                                          ch.attributes.get(ATTRIBUTE_ITALIC));
 
             XftDrawStringUtf8(xftDraw,
                               fgColor,

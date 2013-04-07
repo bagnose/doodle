@@ -12,7 +12,7 @@ std::ostream & operator << (std::ostream & ost, const Char & ch) {
     }
     ost << "'";
 
-    ost << ", attr="  << static_cast<int>(ch.attr)
+    ost << ", attributes="  << ch.attributes
         << ", state=" << static_cast<int>(ch.state)
         << ", fg="    << static_cast<int>(ch.fg)
         << ", bg="    << static_cast<int>(ch.bg);

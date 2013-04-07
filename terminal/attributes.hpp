@@ -6,30 +6,32 @@
 #include <iosfwd>
 #include <stdint.h>
 
-enum Attr {
-    ATTR_BOLD,
-    ATTR_ITALIC,
-    ATTR_UNDERLINE,
-    ATTR_BLINK,
-    ATTR_REVERSE
+enum Attribute {
+    ATTRIBUTE_BOLD,
+    ATTRIBUTE_ITALIC,
+    ATTRIBUTE_UNDERLINE,
+    ATTRIBUTE_BLINK,
+    ATTRIBUTE_REVERSE
 };
 
 //
 //
 //
 
-class AttrSet {
+class AttributeSet {
     uint8_t _bits;
-    static uint8_t bit(Attr attr) { return 1 << attr; }
+    static uint8_t bit(Attribute attr) { return 1 << attr; }
 
 public:
-    AttrSet() : _bits(0) {}
+    AttributeSet() : _bits(0) {}
 
-    void set(Attr attr)       { _bits |= bit(attr); }
-    void unSet(Attr attr)     { _bits &= ~bit(attr); }
-    bool get(Attr attr) const { return _bits & bit(attr); }
+    void clear()                        { _bits = 0; }
+    void set(Attribute attribute)       { _bits |= bit(attribute); }
+    void unSet(Attribute attribute)     { _bits &= ~bit(attribute); }
+    bool get(Attribute attribute) const { return _bits & bit(attribute); }
 };
 
-std::ostream & operator << (std::ostream & ost, AttrSet attrSet);
+std::ostream & operator << (std::ostream & ost, Attribute    attribute);
+std::ostream & operator << (std::ostream & ost, AttributeSet attributeSet);
 
 #endif // ATTRIBUTES__H

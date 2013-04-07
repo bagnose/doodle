@@ -30,7 +30,7 @@ private:
     uint16_t            _cursorCol;
     uint8_t             _bg;
     uint8_t             _fg;
-    uint8_t             _attributes;
+    AttributeSet        _attributes;
     std::vector<bool>   _tabs;
     Tty                 _tty;
 
@@ -63,14 +63,14 @@ protected:
     // Tty::IObserver implementation:
 
     void ttyBegin() throw ();
-    void ttyControl(Tty::Control control) throw ();
+    void ttyControl(Control control) throw ();
     void ttyMoveCursor(uint16_t row, uint16_t col) throw ();
     void ttyClear(Tty::Clear clear) throw ();
     void ttySetFg(uint8_t fg) throw ();
     void ttySetBg(uint8_t bg) throw ();
     void ttyClearAttributes() throw ();
-    void ttyEnableAttribute(Tty::Attribute attribute) throw ();
-    void ttyDisableAttribute(Tty::Attribute attribute) throw ();
+    void ttyEnableAttribute(Attribute attribute) throw ();
+    void ttyDisableAttribute(Attribute attribute) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 
