@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef X_WINDOW_INTERFACE__H
-#define X_WINDOW_INTERFACE__H
+#ifndef X_WINDOW_INTERFACE__HXX
+#define X_WINDOW_INTERFACE__HXX
 
 #include <X11/Xlib.h>
 
@@ -25,4 +25,4 @@ protected:
     virtual ~I_X_Window() {}
 };
 
-#endif // X_WINDOW_INTERFACE__H
+#endif // X_WINDOW_INTERFACE__HXX

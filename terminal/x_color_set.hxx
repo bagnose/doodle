@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef X_COLOR_SET__H
-#define X_COLOR_SET__H
+#ifndef X_COLOR_SET__HXX
+#define X_COLOR_SET__HXX
 
 #include "terminal/common.hxx"
 
@@ -31,4 +31,4 @@ public:
     const XftColor * getCursorColor() const { return &_cursorColor; }
 };
 
-#endif // X_COLOR_SET__H
+#endif // X_COLOR_SET__HXX

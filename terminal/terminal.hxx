@@ -1,9 +1,10 @@
 // vi:noai:sw=4
 
-#ifndef TERMINAL__HPP
-#define TERMINAL__HPP
+#ifndef TERMINAL__HXX
+#define TERMINAL__HXX
 
 #include "terminal/tty.hxx"
+#include "terminal/bit_sets.hxx"
 #include "terminal/simple_buffer.hxx"
 
 #include <vector>
@@ -67,20 +68,20 @@ protected:
     void ttyBegin() throw ();
     void ttyControl(Control control) throw ();
     void ttyMoveCursor(uint16_t row, uint16_t col) throw ();
-    void ttyClearLine(Tty::ClearLine clear) throw ();
-    void ttyClearScreen(Tty::ClearScreen clear) throw ();
+    void ttyClearLine(ClearLine clear) throw ();
+    void ttyClearScreen(ClearScreen clear) throw ();
     void ttySetFg(uint8_t fg) throw ();
     void ttySetBg(uint8_t bg) throw ();
     void ttyClearAttributes() throw ();
     void ttyEnableAttribute(Attribute attribute) throw ();
     void ttyDisableAttribute(Attribute attribute) throw ();
     void ttySetTabStop() throw ();
-    void ttyEnableMode(Tty::Mode mode) throw ();
-    void ttyDisableMode(Tty::Mode mode) throw ();
+    void ttyEnableMode(Mode mode) throw ();
+    void ttyDisableMode(Mode mode) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 
     void ttyChildExited(int exitCode) throw ();
 };
 
-#endif // TERMINAL__HPP
+#endif // TERMINAL__HXX

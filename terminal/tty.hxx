@@ -1,54 +1,17 @@
 // vi:noai:sw=4
 
-#ifndef TTY__HPP
-#define TTY__HPP
+#ifndef TTY__HXX
+#define TTY__HXX
 
-#include "terminal/attributes.hxx"
+#include "terminal/enums.hxx"
 #include "terminal/utf8.hxx"
 #include "terminal/common.hxx"
 
 #include <vector>
 #include <string>
 
-enum Control {
-    CONTROL_BEL,
-    CONTROL_HT,
-    CONTROL_BS,
-    CONTROL_CR,
-    CONTROL_LF
-};
-
 class Tty : protected Uncopyable {
 public:
-    enum ClearScreen {
-        CLEAR_SCREEN_BELOW,
-        CLEAR_SCREEN_ABOVE,
-        CLEAR_SCREEN_ALL
-    };
-
-    enum ClearLine {
-        CLEAR_LINE_RIGHT,
-        CLEAR_LINE_LEFT,
-        CLEAR_LINE_ALL
-    };
-
-    enum Mode {
-        MODE_WRAP,
-        MODE_INSERT,
-        MODE_APPKEYPAD,
-        MODE_ALTSCREEN,
-        MODE_CRLF,
-        MODE_MOUSEBTN,
-        MODE_MOUSEMOTION,
-        // MOUSE = MOUSEBTN | MOUSEMOTION
-        MODE_REVERSE,
-        MODE_KBDLOCK,
-        MODE_HIDE,
-        MODE_ECHO,
-        MODE_APPCURSOR,
-        MODE_MOUSESGR
-    };
-
     typedef std::vector<std::string> Command;
 
     class IObserver {
@@ -173,8 +136,4 @@ protected:
     int  close();
 };
 
-std::ostream & operator << (std::ostream & ost, Control control);
-std::ostream & operator << (std::ostream & ost, Tty::ClearScreen clear);
-std::ostream & operator << (std::ostream & ost, Tty::ClearLine   clear);
-
-#endif // TTY__HPP
+#endif // TTY__HXX

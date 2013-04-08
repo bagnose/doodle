@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef X_WINDOW__HPP
-#define X_WINDOW__HPP
+#ifndef X_WINDOW__HXX
+#define X_WINDOW__HXX
 
 #include "terminal/x_window_interface.hxx"
 #include "terminal/x_color_set.hxx"
@@ -70,4 +70,4 @@ protected:
     void terminalChildExited(int exitStatus) throw ();
 };
 
-#endif // X_WINDOW__HPP
+#endif // X_WINDOW__HXX

@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef X_FONT_SET__HPP
-#define X_FONT_SET__HPP
+#ifndef X_FONT_SET__HXX
+#define X_FONT_SET__HXX
 
 #include "terminal/common.hxx"
 
@@ -51,4 +51,4 @@ protected:
     void      unload(XftFont * font);
 };
 
-#endif // X_FONT_SET__HPP
+#endif // X_FONT_SET__HXX

@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef BUFFER__HPP
-#define BUFFER__HPP
+#ifndef BUFFER__HXX
+#define BUFFER__HXX
 
 #include "terminal/common.hxx"
 #include "terminal/char.hxx"
@@ -208,4 +208,4 @@ inline void dumpWrappedBuffer(const WrappedBuffer & buffer) {
     }
 }
 
-#endif // BUFFER__HPP
+#endif // BUFFER__HXX

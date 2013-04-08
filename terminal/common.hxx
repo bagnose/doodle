@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef COMMON__HPP
-#define COMMON__HPP
+#ifndef COMMON__HXX
+#define COMMON__HXX
 
 #include <iostream>
 #include <sstream>
@@ -98,4 +98,4 @@ private:
     do { } while (false)
 #endif
 
-#endif // COMMON__HPP
+#endif // COMMON__HXX

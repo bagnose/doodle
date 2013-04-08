@@ -1,24 +1,12 @@
 // vi:noai:sw=4
 
-#ifndef ATTRIBUTES__H
-#define ATTRIBUTES__H
+#ifndef BIT_SETS__HXX
+#define BIT_SETS__HXX
+
+#include "terminal/enums.hxx"
 
 #include <iosfwd>
 #include <stdint.h>
-
-enum Attribute {
-    ATTRIBUTE_BOLD,
-    ATTRIBUTE_ITALIC,
-    ATTRIBUTE_UNDERLINE,
-    ATTRIBUTE_BLINK,
-    ATTRIBUTE_REVERSE
-};
-
-std::ostream & operator << (std::ostream & ost, Attribute    attribute);
-
-//
-//
-//
 
 class AttributeSet {
     uint8_t _bits;
@@ -35,4 +23,4 @@ public:
 
 std::ostream & operator << (std::ostream & ost, AttributeSet attributeSet);
 
-#endif // ATTRIBUTES__H
+#endif // BIT_SETS__HXX

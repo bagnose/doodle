@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef UTF8__HPP
-#define UTF8__HPP
+#ifndef UTF8__HXX
+#define UTF8__HXX
 
 #include <stddef.h>
 #include <stdint.h>
@@ -36,4 +36,4 @@ Length    encode(CodePoint codePoint, char * sequence) throw (Error);
 
 const int UTF_SIZ = 4;
 
-#endif // UTF8__HPP
+#endif // UTF8__HXX

@@ -1,9 +1,9 @@
 // vi:noai:sw=4
 
-#ifndef CHAR__HPP
-#define CHAR__HPP
+#ifndef CHAR__HXX
+#define CHAR__HXX
 
-#include "terminal/attributes.hxx"
+#include "terminal/bit_sets.hxx"
 #include "terminal/utf8.hxx"
 
 #include <algorithm>
@@ -59,4 +59,4 @@ public:
 
 std::ostream & operator << (std::ostream & ost, const Char & ch);
 
-#endif // CHAR__HPP
+#endif // CHAR__HXX

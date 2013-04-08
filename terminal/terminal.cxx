@@ -102,37 +102,37 @@ void Terminal::ttyMoveCursor(uint16_t row, uint16_t col) throw () {
     _cursorCol = col;
 }
 
-void Terminal::ttyClearLine(Tty::ClearLine clear) throw () {
+void Terminal::ttyClearLine(ClearLine clear) throw () {
     switch (clear) {
-        case Tty::CLEAR_LINE_RIGHT:
+        case CLEAR_LINE_RIGHT:
             for (uint16_t c = _cursorCol + 1; c != _buffer.getCols(); ++c) {
                 _buffer.overwriteChar(Char::null(), _cursorRow, c);
             }
             break;
-        case Tty::CLEAR_LINE_LEFT:
+        case CLEAR_LINE_LEFT:
             for (uint16_t c = 0; c != _cursorCol; ++c) {
                 _buffer.overwriteChar(Char::null(), _cursorRow, c);
             }
             break;
-        case Tty::CLEAR_LINE_ALL:
+        case CLEAR_LINE_ALL:
             _buffer.clearLine(_cursorRow);
             break;
     }
 }
 
-void Terminal::ttyClearScreen(Tty::ClearScreen clear) throw () {
+void Terminal::ttyClearScreen(ClearScreen clear) throw () {
     switch (clear) {
-        case Tty::CLEAR_SCREEN_BELOW:
+        case CLEAR_SCREEN_BELOW:
             for (uint16_t r = _cursorRow + 1; r != _buffer.getRows(); ++r) {
                 _buffer.clearLine(r);
             }
             break;
-        case Tty::CLEAR_SCREEN_ABOVE:
+        case CLEAR_SCREEN_ABOVE:
             for (uint16_t r = 0; r != _cursorRow; ++r) {
                 _buffer.clearLine(r);
             }
             break;
-        case Tty::CLEAR_SCREEN_ALL:
+        case CLEAR_SCREEN_ALL:
             _buffer.clearAll();
             _cursorCol = _cursorRow = 0;
             break;
@@ -171,11 +171,11 @@ void Terminal::ttySetTabStop() throw () {
     _tabs[_cursorCol] = true;
 }
 
-void Terminal::ttyEnableMode(Tty::Mode mode) throw () {
+void Terminal::ttyEnableMode(Mode mode) throw () {
     // TODO
 }
 
-void Terminal::ttyDisableMode(Tty::Mode mode) throw () {
+void Terminal::ttyDisableMode(Mode mode) throw () {
     // TODO
 }
 

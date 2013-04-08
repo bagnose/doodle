@@ -1,7 +1,7 @@
 // vi:noai:sw=4
 
-#ifndef SIMPLE_BUFFER__H
-#define SIMPLE_BUFFER__H
+#ifndef SIMPLE_BUFFER__HXX
+#define SIMPLE_BUFFER__HXX
 
 #include "terminal/common.hxx"
 #include "terminal/char.hxx"
@@ -100,5 +100,4 @@ public:
     }
 };
 
-#endif // SIMPLE_BUFFER__H
-
+#endif // SIMPLE_BUFFER__HXX
