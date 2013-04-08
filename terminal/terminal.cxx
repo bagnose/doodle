@@ -21,7 +21,7 @@ Terminal::Terminal(IObserver          & observer,
          term,
          command)
 {
-    _tabs.resize(cols);
+    _tabs.resize(_buffer.getCols());
     for (size_t i = 0; i != _tabs.size(); ++i) {
         _tabs[i] = (i + 1) % Tty::defaultTab() == 0;
     }
@@ -152,23 +152,18 @@ void Terminal::ttySetBg(uint8_t bg) throw () {
 }
 
 void Terminal::ttyClearAttributes() throw () {
-    PRINT("Clearing attributes");
+    //PRINT("Clearing attributes");
     _attributes.clear();
 }
 
 void Terminal::ttyEnableAttribute(Attribute attribute) throw () {
-    PRINT("Enabling attribute: " << attribute);
+    //PRINT("Enabling attribute: " << attribute);
     _attributes.set(attribute);
 }
 
 void Terminal::ttyDisableAttribute(Attribute attribute) throw () {
-    PRINT("Disabling attribute: " << attribute);
+    //PRINT("Disabling attribute: " << attribute);
     _attributes.unset(attribute);
-}
-
-void Terminal::ttySetTabStop() throw () {
-    PRINT("Setting tab stop at: " << _cursorCol);
-    _tabs[_cursorCol] = true;
 }
 
 void Terminal::ttyEnableMode(Mode mode) throw () {
@@ -179,6 +174,39 @@ void Terminal::ttyEnableMode(Mode mode) throw () {
 void Terminal::ttyDisableMode(Mode mode) throw () {
     PRINT("Disable mode: " << mode);
     _modes.unset(mode);
+}
+
+void Terminal::ttySetTabStop() throw () {
+    PRINT("Setting tab stop at: " << _cursorCol);
+    _tabs[_cursorCol] = true;
+}
+
+void Terminal::ttyReset() throw () {
+    // TODO consolidate
+
+    _buffer.clearAll();
+
+    _cursorRow = 0;
+    _cursorCol = 0;
+
+    _bg = Tty::defaultBg();
+    _fg = Tty::defaultFg();
+
+    _modes.clear();
+    _attributes.clear();
+
+    _tabs.resize(_buffer.getCols());
+    for (size_t i = 0; i != _tabs.size(); ++i) {
+        _tabs[i] = (i + 1) % Tty::defaultTab() == 0;
+    }
+}
+
+void Terminal::ttyResetTitle() throw () {
+    _observer.terminalResetTitle();
+}
+
+void Terminal::ttySetTitle(const std::string & title) throw () {
+    _observer.terminalSetTitle(title);
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {

@@ -17,6 +17,8 @@ public:
         //virtual void terminalDamage(uint16_t row, uint16_t col) throw () = 0;
         //virtual void terminalDamageRange(uint16_t row, uint16_t col) throw () = 0;
         virtual void terminalDamageAll() throw () = 0;
+        virtual void terminalResetTitle() throw () = 0;
+        virtual void terminalSetTitle(const std::string & title) throw () = 0;
         virtual void terminalEnd() throw () = 0;
         virtual void terminalChildExited(int exitStatus) throw () = 0;
 
@@ -76,9 +78,12 @@ protected:
     void ttyClearAttributes() throw ();
     void ttyEnableAttribute(Attribute attribute) throw ();
     void ttyDisableAttribute(Attribute attribute) throw ();
-    void ttySetTabStop() throw ();
     void ttyEnableMode(Mode mode) throw ();
     void ttyDisableMode(Mode mode) throw ();
+    void ttySetTabStop() throw ();
+    void ttyReset() throw ();
+    void ttyResetTitle() throw ();
+    void ttySetTitle(const std::string & title) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 

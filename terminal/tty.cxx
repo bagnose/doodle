@@ -13,18 +13,20 @@
 
 namespace {
 
-std::string strArgs(const std::vector<int32_t> & args) {
+template <typename T>
+std::string strArgs(const std::vector<T> & args) {
     std::ostringstream str;
     bool first = true;
     for (auto a : args) {
         if (first) { first = false; }
-        else       { str << " "; }
+        else       { str << ","; }
         str << a;
     }
     return str.str();
 }
 
-int32_t nthArg(const std::vector<int32_t> & args, size_t n, int32_t fallback = 0) {
+template <typename T>
+T nthArg(const std::vector<T> & args, size_t n, const T & fallback = T()) {
     if (n < args.size()) {
         return args[n];
     }
@@ -418,9 +420,8 @@ void Tty::processEscape(char c) {
             _state = STATE_NORMAL;
             break;
         case 'c':   // RIS - Reset to initial state
-            FATAL("NYI st.c:2197");
-            //treset();
-            //xresettitle();
+            _observer.ttyReset();
+            _observer.ttyResetTitle();
             _state = STATE_NORMAL;
             break;
         case '=':   // DECPAM - Application keypad
@@ -589,7 +590,50 @@ void Tty::processCsiEscape() {
 
 void Tty::processStrEscape() {
     ENFORCE(_state == STATE_STR_ESCAPE,);       // XXX here or outside?
-    PRINT("STR-esc: " << _escapeStr.seq);
+    PRINT("STR-esc: type=" << _escapeStr.type << ", seq=" << _escapeStr.seq);
+
+    std::vector<std::string> args;
+
+    //
+    // Parse the arguments.
+    //
+
+    bool next = true;
+    for (auto c : _escapeStr.seq) {
+        if (next) { args.push_back(std::string()); next = false; }
+
+        if (c == ';') { next = true; }
+        else          { args.back().push_back(c); }
+    }
+
+    //
+    // Handle the sequence.
+    //
+
+    switch (_escapeStr.type) {
+        case ']':   // OSC - Operating System Command
+            switch (unstringify<int>(nthArg(args, 0))) {
+                case 0:
+                case 1:
+                case 2:
+                    if (args.size() > 1) {
+                        _observer.ttySetTitle(nthArg(args, 1));
+                    }
+                    break;
+                default:
+                    PRINT("Unandled: " << _escapeStr.seq);
+            }
+            break;
+        case 'k':
+            _observer.ttySetTitle(nthArg(args, 0));
+            break;
+        case 'P':   // DSC - Device Control String
+        case '_':   // APC - Application Program Command
+        case '^':   // PM Privacy Message
+        default:
+            PRINT("Unandled: " << _escapeStr.seq);
+            break;
+    }
 }
 
 void Tty::processAttributes(const std::vector<int32_t> & args) {

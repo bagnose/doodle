@@ -8,8 +8,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 
-const int X_Window::BORDER_THICKNESS = 1;
-const int X_Window::SCROLLBAR_WIDTH  = 8;
+const int         X_Window::BORDER_THICKNESS = 1;
+const int         X_Window::SCROLLBAR_WIDTH  = 8;
+const std::string X_Window::DEFAULT_TITLE    = "terminol";
 
 X_Window::X_Window(Display            * display,
                    Window               parent,
@@ -48,12 +49,13 @@ X_Window::X_Window(Display            * display,
                             &attributes);
 
     XSetStandardProperties(_display, _window,
-                           "terminal", "terminal",
+                           "terminol", "terminol",
                            None, nullptr, 0, nullptr);
 
     XSelectInput(_display, _window,
                  StructureNotifyMask | ExposureMask | ButtonPressMask | KeyPressMask);
 
+    setTitle(DEFAULT_TITLE);
 
     XMapWindow(_display, _window);
 
@@ -86,8 +88,10 @@ void X_Window::keyPress(XKeyEvent & event) {
     KeySym keysym;
 
     int len = XLookupString(&event, buffer, sizeof buffer, &keysym, nullptr);
+    /*
     PRINT(<< "keycode=" << keycode << " mask=(" << maskStr.str() << ") " <<
           " str='" << std::string(buffer, buffer + len) << "'" << " len=" << len);
+          */
 
     if (len > 0) {
         _terminal->enqueueWrite(buffer, len);
@@ -207,12 +211,20 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
                           _fontSet.getNormal(),
                           x,
                           y + _fontSet.getAscent(),
-                          (const FcChar8 *)"¶", 2);
+                          (const FcChar8 *)"¶", 2); 
+                          //(const FcChar8 *)"█", 3); 
     }
 
     XftDrawDestroy(xftDraw);
 
     XFlush(_display);
+}
+
+void X_Window::setTitle(const std::string & title) {
+    char * t = const_cast<char *>(title.c_str());
+    XTextProperty prop;
+    Xutf8TextListToTextProperty(_display, &t, 1, XUTF8StringStyle, &prop);
+    XSetWMName(_display, _window, &prop);
 }
 
 // Terminal::IObserver implementation:
@@ -222,6 +234,15 @@ void X_Window::terminalBegin() throw () {
 
 void X_Window::terminalDamageAll() throw () {
     _damage = true;
+}
+
+void X_Window::terminalResetTitle() throw () {
+    setTitle(DEFAULT_TITLE);
+}
+
+void X_Window::terminalSetTitle(const std::string & title) throw () {
+    PRINT("Set title: " << title);
+    setTitle(title);
 }
 
 void X_Window::terminalEnd() throw () {

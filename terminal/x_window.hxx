@@ -13,8 +13,9 @@ class X_Window :
     protected Terminal::IObserver,
     protected Uncopyable
 {
-    static const int BORDER_THICKNESS;
-    static const int SCROLLBAR_WIDTH;
+    static const int         BORDER_THICKNESS;
+    static const int         SCROLLBAR_WIDTH;
+    static const std::string DEFAULT_TITLE;
 
     Display    * _display;
     Screen     * _screen;
@@ -61,11 +62,14 @@ protected:
     void rowCol2XY(uint16_t row, size_t col, uint16_t & x, uint16_t & y) const;
 
     void draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih);
+    void setTitle(const std::string & title);
 
     // Terminal::IObserver implementation:
 
     void terminalBegin() throw ();
     void terminalDamageAll() throw ();
+    void terminalResetTitle() throw ();
+    void terminalSetTitle(const std::string & title) throw ();
     void terminalEnd() throw ();
     void terminalChildExited(int exitStatus) throw ();
 };

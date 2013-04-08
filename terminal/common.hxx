@@ -7,22 +7,6 @@
 #include <sstream>
 #include <cstring>
 
-template <typename T> std::string stringify(const T & t) {
-    std::ostringstream ost;
-    ost << t;
-    return ost.str();
-}
-
-// Inherit from this to be uncopyable.
-class Uncopyable {
-public:
-    Uncopyable() {}
-
-private:
-    Uncopyable(const Uncopyable &) {}
-    Uncopyable & operator = (const Uncopyable &) { return *this; }
-};
-
 #define LIKELY(x)   __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 
@@ -97,5 +81,29 @@ private:
 #  define ASSERT_SYS(condition, output) \
     do { } while (false)
 #endif
+
+template <typename T> std::string stringify(const T & t) {
+    std::ostringstream ost;
+    ost << t;
+    return ost.str();
+}
+
+template <typename T> T unstringify(const std::string & str) {
+    std::istringstream ist(str + '\n');
+    T t;
+    ist >> t;
+    if (ist.good()) { return t; }
+    else { FATAL("Failed to convert: " << str); }
+}
+
+// Inherit from this to be uncopyable.
+class Uncopyable {
+public:
+    Uncopyable() {}
+
+private:
+    Uncopyable(const Uncopyable &) {}
+    Uncopyable & operator = (const Uncopyable &) { return *this; }
+};
 
 #endif // COMMON__HXX

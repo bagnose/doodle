@@ -32,6 +32,9 @@ public:
         virtual void ttyEnableMode(Mode mode) throw () = 0;
         virtual void ttyDisableMode(Mode mode) throw () = 0;
         virtual void ttySetTabStop() throw () = 0;
+        virtual void ttyReset() throw () = 0 ;
+        virtual void ttyResetTitle() throw () = 0;
+        virtual void ttySetTitle(const std::string & title) throw () = 0;
         // UTF-8
         virtual void ttyUtf8(const char * s, utf8::Length length) throw () = 0;
         // end

@@ -90,8 +90,8 @@ X_ColorSet::X_ColorSet(Display  * display,
     {
         XRenderColor  xrColor;
         xrColor.red   = 0xffff;
-        xrColor.green = 0;
-        xrColor.blue  = 0;
+        xrColor.green = 0x0000;
+        xrColor.blue  = 0xffff;
         xrColor.alpha = 0xffff;
         XftColorAllocValue(_display,
                            _visual,
