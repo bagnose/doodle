@@ -34,6 +34,7 @@ private:
     uint8_t             _bg;
     uint8_t             _fg;
     AttributeSet        _attributes;
+    ModeSet             _modes;
     std::vector<bool>   _tabs;
     Tty                 _tty;
 

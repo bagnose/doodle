@@ -46,6 +46,37 @@ std::ostream & operator << (std::ostream & ost, ClearLine clear) {
     FATAL(<< static_cast<int>(clear));
 }
 
+std::ostream & operator << (std::ostream & ost, Mode mode) {
+    switch (mode) {
+        case MODE_WRAP:
+            return ost << "WRAP";
+        case MODE_INSERT:
+            return ost << "INSERT";
+        case MODE_APPKEYPAD:
+            return ost << "APPKEYPAD";
+        case MODE_ALTSCREEN:
+            return ost << "ALTSCREEN";
+        case MODE_CRLF:
+            return ost << "CRLF";
+        case MODE_MOUSEBTN:
+            return ost << "MOUSEBTN";
+        case MODE_MOUSEMOTION:
+            return ost << "MOUSEMOTION";
+        case MODE_REVERSE:
+            return ost << "REVERSE";
+        case MODE_KBDLOCK:
+            return ost << "KBDLOCK";
+        case MODE_HIDE:
+            return ost << "HIDE";
+        case MODE_ECHO:
+            return ost << "ECHO";
+        case MODE_APPCURSOR:
+            return ost << "APPCURSOR";
+        case MODE_MOUSESGR:
+            return ost << "MOUSESGR";
+    }
+}
+
 std::ostream & operator << (std::ostream & ost, Attribute attribute) {
     switch (attribute) {
         case ATTRIBUTE_BOLD:

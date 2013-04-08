@@ -163,7 +163,7 @@ void Terminal::ttyEnableAttribute(Attribute attribute) throw () {
 
 void Terminal::ttyDisableAttribute(Attribute attribute) throw () {
     PRINT("Disabling attribute: " << attribute);
-    _attributes.unSet(attribute);
+    _attributes.unset(attribute);
 }
 
 void Terminal::ttySetTabStop() throw () {
@@ -172,11 +172,13 @@ void Terminal::ttySetTabStop() throw () {
 }
 
 void Terminal::ttyEnableMode(Mode mode) throw () {
-    // TODO
+    PRINT("Enabling mode: " << mode);
+    _modes.set(mode);
 }
 
 void Terminal::ttyDisableMode(Mode mode) throw () {
-    // TODO
+    PRINT("Disable mode: " << mode);
+    _modes.unset(mode);
 }
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {

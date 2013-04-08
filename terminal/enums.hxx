@@ -57,7 +57,8 @@ enum Mode {
     MODE_HIDE,
     MODE_ECHO,
     MODE_APPCURSOR,
-    MODE_MOUSESGR
+    MODE_MOUSESGR,
+    LAST_MODE = MODE_MOUSESGR
 };
 
 std::ostream & operator << (std::ostream & ost, Mode mode);
@@ -71,7 +72,8 @@ enum Attribute {
     ATTRIBUTE_ITALIC,
     ATTRIBUTE_UNDERLINE,
     ATTRIBUTE_BLINK,
-    ATTRIBUTE_REVERSE
+    ATTRIBUTE_REVERSE,
+    LAST_ATTRIBUTE = ATTRIBUTE_REVERSE
 };
 
 std::ostream & operator << (std::ostream & ost, Attribute attribute);
