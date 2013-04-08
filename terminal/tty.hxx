@@ -67,22 +67,22 @@ private:
         STATE_ESCAPE_START,
         STATE_CSI_ESCAPE,
         STATE_STR_ESCAPE,
-        STATE_ESCAPE_START_STR,
+        STATE_ESCAPE_START_STR,     // Same as STATE_ESCAPE_START but with unprocessed str.
         STATE_TEST_ESCAPE
     };
 
-    IObserver         & mObserver;
-    bool                mDispatch;
-    int                 mFd;
-    pid_t               mPid;
-    bool                mDumpWrites;
-    State               mState;
+    IObserver         & _observer;
+    bool                _dispatch;
+    int                 _fd;
+    pid_t               _pid;
+    bool                _dumpWrites;
+    State               _state;
     // FIXME think about unifying these
-    std::string         mEscapeSeq;
-    char                mEscapeStrType;
-    std::string         mEscapeStr;
-    std::vector<char>   mReadBuffer;
-    std::vector<char>   mWriteBuffer;
+    std::string         _escapeCsiSeq;
+    char                _escapeStrType;
+    std::string         _escapeStrSeq;
+    std::vector<char>   _readBuffer;
+    std::vector<char>   _writeBuffer;
 
 public:
     static uint8_t  defaultBg()  { return 0; }

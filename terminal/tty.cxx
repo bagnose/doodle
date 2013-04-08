@@ -46,12 +46,12 @@ Tty::Tty(IObserver         & observer,
          const std::string & windowId,
          const std::string & term,
          const Command     & command) :
-    mObserver(observer),
-    mDispatch(false),
-    mFd(-1),
-    mPid(0),
-    mDumpWrites(false),
-    mState(STATE_NORMAL)
+    _observer(observer),
+    _dispatch(false),
+    _fd(-1),
+    _pid(0),
+    _dumpWrites(false),
+    _state(STATE_NORMAL)
 {
     openPty(rows, cols, windowId, term, command);
 }
@@ -64,26 +64,26 @@ Tty::~Tty() {
 }
 
 bool Tty::isOpen() const {
-    ASSERT(!mDispatch,);
-    return mFd != -1;
+    ASSERT(!_dispatch,);
+    return _fd != -1;
 }
 
 int Tty::getFd() {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
-    return mFd;
+    return _fd;
 }
 
 void Tty::read() {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
     char buffer[4096];
 
-    ssize_t rval = ::read(mFd, static_cast<void *>(buffer), sizeof buffer);
+    ssize_t rval = ::read(_fd, static_cast<void *>(buffer), sizeof buffer);
     //PRINT("::read()=" << rval);
 
     if (rval == -1) {
-        mObserver.ttyChildExited(close());
+        _observer.ttyChildExited(close());
 
     }
     else if (rval == 0) {
@@ -91,63 +91,63 @@ void Tty::read() {
     }
     else {
         ASSERT(rval > 0,);
-        auto oldSize = mReadBuffer.size();
-        mReadBuffer.resize(oldSize + rval);
-        std::copy(buffer, buffer + rval, &mReadBuffer[oldSize]);
+        auto oldSize = _readBuffer.size();
+        _readBuffer.resize(oldSize + rval);
+        std::copy(buffer, buffer + rval, &_readBuffer[oldSize]);
 
-        mDispatch = true;
+        _dispatch = true;
         processBuffer();
-        mDispatch = false;
+        _dispatch = false;
     }
 }
 
 void Tty::enqueueWrite(const char * data, size_t size) {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
 
-    if (!mDumpWrites) {
-        auto oldSize = mWriteBuffer.size();
-        mWriteBuffer.resize(oldSize + size);
-        std::copy(data, data + size, &mWriteBuffer[oldSize]);
+    if (!_dumpWrites) {
+        auto oldSize = _writeBuffer.size();
+        _writeBuffer.resize(oldSize + size);
+        std::copy(data, data + size, &_writeBuffer[oldSize]);
     }
 }
 
 bool Tty::isWritePending() const {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
-    return !mWriteBuffer.empty();
+    return !_writeBuffer.empty();
 }
 
 void Tty::write() {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
     ASSERT(isWritePending(), "No writes queued.");
-    ASSERT(!mDumpWrites, "Dump writes is set.");
+    ASSERT(!_dumpWrites, "Dump writes is set.");
 
-    ssize_t rval = ::write(mFd, static_cast<const void *>(&mWriteBuffer.front()),
-                           mWriteBuffer.size());
+    ssize_t rval = ::write(_fd, static_cast<const void *>(&_writeBuffer.front()),
+                           _writeBuffer.size());
     //PRINT("::write()=" << rval);
 
     if (rval == -1) {
         // The child has gone. Don't write any more data.
-        mDumpWrites = true;
-        mWriteBuffer.clear();
+        _dumpWrites = true;
+        _writeBuffer.clear();
     }
     else if (rval == 0) {
         ASSERT(false, "::write() zero bytes!");
     }
     else {
-        mWriteBuffer.erase(mWriteBuffer.begin(), mWriteBuffer.begin() + rval);
+        _writeBuffer.erase(_writeBuffer.begin(), _writeBuffer.begin() + rval);
     }
 }
 
 void Tty::resize(uint16_t rows, uint16_t cols) {
-    ASSERT(!mDispatch,);
+    ASSERT(!_dispatch,);
     ASSERT(isOpen(), "Not open.");
 
     struct winsize winsize = { rows, cols, 0, 0 };
 
-    ENFORCE(::ioctl(mFd, TIOCSWINSZ, &winsize) != -1,);
+    ENFORCE(::ioctl(_fd, TIOCSWINSZ, &winsize) != -1,);
 }
 
 void Tty::openPty(uint16_t            rows,
@@ -160,14 +160,14 @@ void Tty::openPty(uint16_t            rows,
 
     ENFORCE_SYS(::openpty(&master, &slave, nullptr, nullptr, &winsize) != -1,);
 
-    mPid = ::fork();
-    ENFORCE_SYS(mPid != -1, "::fork() failed.");
+    _pid = ::fork();
+    ENFORCE_SYS(_pid != -1, "::fork() failed.");
 
-    if (mPid != 0) {
+    if (_pid != 0) {
         // Parent code-path.
 
         ENFORCE_SYS(::close(slave) != -1,);
-        mFd  = master;
+        _fd  = master;
     }
     else {
         // Child code-path.
@@ -234,46 +234,46 @@ void Tty::execShell(const std::string & windowId,
 }
 
 void Tty::processBuffer() {
-    ASSERT(!mReadBuffer.empty(),);
+    ASSERT(!_readBuffer.empty(),);
 
-    mObserver.ttyBegin();
+    _observer.ttyBegin();
 
     size_t i = 0;
 
-    while (i != mReadBuffer.size()) {
-        utf8::Length length = utf8::leadLength(mReadBuffer[i]);
+    while (i != _readBuffer.size()) {
+        utf8::Length length = utf8::leadLength(_readBuffer[i]);
 
-        if (mReadBuffer.size() < i + length) {
+        if (_readBuffer.size() < i + length) {
             break;
         }
 
-        processChar(&mReadBuffer[i], length);
+        processChar(&_readBuffer[i], length);
 
         i += length;
     }
 
-    mReadBuffer.erase(mReadBuffer.begin(), mReadBuffer.begin() + i);
+    _readBuffer.erase(_readBuffer.begin(), _readBuffer.begin() + i);
 
-    mObserver.ttyEnd();
+    _observer.ttyEnd();
 }
 
 void Tty::processChar(const char * s, utf8::Length length) {
     if (length == utf8::L1) {
         char ascii = s[0];
 
-        if (mState == STATE_STR_ESCAPE) {
+        if (_state == STATE_STR_ESCAPE) {
             switch (ascii) {
                 case '\x1b':
-                    mState = STATE_ESCAPE_START_STR;
+                    _state = STATE_ESCAPE_START_STR;
                     break;
                 case '\a':      // xterm backwards compatibility
                     processStrEscape();
-                    mState = STATE_NORMAL;
-                    mEscapeStr.clear();
+                    _state = STATE_NORMAL;
+                    _escapeStrSeq.clear();
                     break;
                 default:
                     // XXX upper limit??
-                    mEscapeStr.push_back(ascii);
+                    _escapeStrSeq.push_back(ascii);
                     break;
             }
         }
@@ -281,63 +281,63 @@ void Tty::processChar(const char * s, utf8::Length length) {
             bool isControl = ascii < '\x20' || ascii == '\x7f';
 
             if (isControl) {
-                ASSERT(mState == STATE_NORMAL,);
+                ASSERT(_state == STATE_NORMAL,);
                 processControl(ascii);
             }
-            else if (mState == STATE_ESCAPE_START) {
+            else if (_state == STATE_ESCAPE_START) {
                 processEscape(ascii);
             }
-            else if (mState == STATE_ESCAPE_START_STR) {
+            else if (_state == STATE_ESCAPE_START_STR) {
                 processEscapeStr(ascii);
             }
-            else if (mState == STATE_CSI_ESCAPE) {
-                mEscapeSeq.push_back(ascii);
+            else if (_state == STATE_CSI_ESCAPE) {
+                _escapeCsiSeq.push_back(ascii);
 
-                if (ascii >= 0x40 && ascii <= 0x7e) {
+                if (ascii >= 0x40 && ascii < 0x7f) {
                     processCsiEscape();
-                    mState = STATE_NORMAL;
-                    mEscapeSeq.clear();
+                    _state = STATE_NORMAL;
+                    _escapeCsiSeq.clear();
                 }
             }
             else {
-                mObserver.ttyUtf8(s, length);
+                _observer.ttyUtf8(s, length);
             }
         }
     }
     else {
-        if (mState != STATE_NORMAL) {
-            ERROR("Got UTF-8 whilst state: " << mState);
+        if (_state != STATE_NORMAL) {
+            ERROR("Got UTF-8 whilst state: " << _state);
         }
 
-        mObserver.ttyUtf8(s, length);
+        _observer.ttyUtf8(s, length);
     }
 }
 
 void Tty::processControl(char c) {
-    ASSERT(mState == STATE_NORMAL,);
+    ASSERT(_state == STATE_NORMAL,);
 
     switch (c) {
         case '\a':
-            mObserver.ttyControl(CONTROL_BEL);
+            _observer.ttyControl(CONTROL_BEL);
             break;
         case '\t':
-            mObserver.ttyControl(CONTROL_HT);
+            _observer.ttyControl(CONTROL_HT);
             break;
         case '\b':
-            mObserver.ttyControl(CONTROL_BS);
+            _observer.ttyControl(CONTROL_BS);
             break;
         case '\r':
-            mObserver.ttyControl(CONTROL_CR);
+            _observer.ttyControl(CONTROL_CR);
             break;
         case '\f':
         case '\v':
         case '\n':
-            mObserver.ttyControl(CONTROL_LF);
+            _observer.ttyControl(CONTROL_LF);
             break;
         case '\x1b':
             // ESC start
             //PRINT("Escape sequence started.");
-            mState = STATE_ESCAPE_START;
+            _state = STATE_ESCAPE_START;
             break;
         default:
             PRINT("Ignored control char: " << int(c));
@@ -346,24 +346,24 @@ void Tty::processControl(char c) {
 }
 
 void Tty::processEscape(char c) {
-    ASSERT(mState == STATE_ESCAPE_START,);
+    ASSERT(_state == STATE_ESCAPE_START,);
 
     switch (c) {
         case '[':
             // CSI
-            mState = STATE_CSI_ESCAPE;
+            _state = STATE_CSI_ESCAPE;
             break;
         case '#':
             // test
-            mState = STATE_TEST_ESCAPE;
+            _state = STATE_TEST_ESCAPE;
             break;
         case 'P':
         case '_': /* APC -- Application Program Command */
         case '^': /* PM -- Privacy Message */
         case ']': /* OSC -- Operating System Command */
         case 'k': /* old title set compatibility */
-            mEscapeStrType = c;
-            mState = STATE_STR_ESCAPE;
+            _escapeStrType = c;
+            _state = STATE_STR_ESCAPE;
             break;
         case '(':
             // alt char set
@@ -371,66 +371,66 @@ void Tty::processEscape(char c) {
         case ')':
         case '*':
         case '+':
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'D':   // IND - linefeed
             // TODO
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'E':   // NEL - next line
             // TODO
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'H':   // HTS - Horizontal tab stop.
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'M':   // RI - Reverse index.
             // TODO
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'Z':   // DECID -- Identify Terminal
             //ttywrite(VT102ID, sizeof(VT102ID) - 1);
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'c':   // RIS - Reset to initial state
             //treset();
             //xresettitle();
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case '=':   // DECPAM - Application keypad
             //term.mode |= MODE_APPKEYPAD;
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case '>':   // DECPNM - Normal keypad
             //term.mode &= ~MODE_APPKEYPAD;
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case '7':   // DECSC - Save Cursor
             //tcursor(CURSOR_SAVE);
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case '8':   // DECRC - Restore Cursor
             //tcursor(CURSOR_LOAD);
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case '\\': // ST -- Stop
-            if (mState == STATE_STR_ESCAPE) {
+            if (_state == STATE_STR_ESCAPE) {
                 processStrEscape();
-                mEscapeStr.clear();
+                _escapeStrSeq.clear();
             }
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
         case 'm':
             break;
         default:
             ERROR("Unknown escape sequence: " << c);
-            mState = STATE_NORMAL;
+            _state = STATE_NORMAL;
             break;
     }
 }
 
 void Tty::processEscapeStr(char c) {
-    ASSERT(mState == STATE_ESCAPE_START_STR,);
+    ASSERT(_state == STATE_ESCAPE_START_STR,);
 
     switch (c) {
         case '\\':
@@ -440,27 +440,27 @@ void Tty::processEscapeStr(char c) {
             break;
     }
 
-    mState = STATE_NORMAL;
+    _state = STATE_NORMAL;
 }
 
 void Tty::processCsiEscape() {
-    ENFORCE(mState == STATE_CSI_ESCAPE,);       // XXX here or outside?
-    ASSERT(!mEscapeSeq.empty(),);
-    //PRINT("CSI-esc: " << mEscapeSeq);
+    ENFORCE(_state == STATE_CSI_ESCAPE,);       // XXX here or outside?
+    ASSERT(!_escapeCsiSeq.empty(),);
+    //PRINT("CSI-esc: " << _escapeCsiSeq);
 
     size_t i = 0;
     bool priv = false;
     std::vector<int32_t> args;
 
-    if (mEscapeSeq.front() == '?') {
+    if (_escapeCsiSeq.front() == '?') {
         ++i;
         priv = true;
     }
 
     bool inArg = false;
 
-    while (i != mEscapeSeq.size()) {
-        char c = mEscapeSeq[i];
+    while (i != _escapeCsiSeq.size()) {
+        char c = _escapeCsiSeq[i];
 
         if (c >= '0' && c <= '9') {
             if (!inArg) {
@@ -482,11 +482,11 @@ void Tty::processCsiEscape() {
         ++i;
     }
 
-    if (i == mEscapeSeq.size()) {
-        ERROR("Bad CSI: " << mEscapeSeq);
+    if (i == _escapeCsiSeq.size()) {
+        ERROR("Bad CSI: " << _escapeCsiSeq);
     }
     else {
-        char mode = mEscapeSeq[i];
+        char mode = _escapeCsiSeq[i];
         switch (mode) {
             case 'h':
                 //PRINT(<<"CSI: Set terminal mode: " << strArgs(args));
@@ -499,13 +499,13 @@ void Tty::processCsiEscape() {
             case 'K':   // EL - Clear line
                 switch (nthArg(args, 0)) {
                     case 0: // right
-                        mObserver.ttyClearLine(CLEAR_LINE_RIGHT);
+                        _observer.ttyClearLine(CLEAR_LINE_RIGHT);
                         break;
                     case 1: // left
-                        mObserver.ttyClearLine(CLEAR_LINE_LEFT);
+                        _observer.ttyClearLine(CLEAR_LINE_LEFT);
                         break;
                     case 2: // all
-                        mObserver.ttyClearLine(CLEAR_LINE_ALL);
+                        _observer.ttyClearLine(CLEAR_LINE_ALL);
                         break;
                 }
                 break;
@@ -517,7 +517,7 @@ void Tty::processCsiEscape() {
                 uint16_t row = nthArgFallback(args, 0, 1) - 1;
                 uint16_t col = nthArgFallback(args, 1, 1) - 1;
                 //PRINT("CSI: Move cursor: row=" << row << ", col=" << col);
-                mObserver.ttyMoveCursor(row, col);
+                _observer.ttyMoveCursor(row, col);
             }
                 break;
             //case '!':
@@ -527,15 +527,15 @@ void Tty::processCsiEscape() {
                 switch (nthArg(args, 0)) {
                     case 0:
                         // below
-                        mObserver.ttyClearScreen(CLEAR_SCREEN_BELOW);
+                        _observer.ttyClearScreen(CLEAR_SCREEN_BELOW);
                         break;
                     case 1:
                         // above
-                        mObserver.ttyClearScreen(CLEAR_SCREEN_ABOVE);
+                        _observer.ttyClearScreen(CLEAR_SCREEN_ABOVE);
                         break;
                     case 2:
                         // all
-                        mObserver.ttyClearScreen(CLEAR_SCREEN_ALL);
+                        _observer.ttyClearScreen(CLEAR_SCREEN_ALL);
                         break;
                     default:
                         FATAL("");
@@ -552,8 +552,8 @@ void Tty::processCsiEscape() {
 }
 
 void Tty::processStrEscape() {
-    ENFORCE(mState == STATE_STR_ESCAPE,);       // XXX here or outside?
-    PRINT("STR-esc: " << mEscapeStr);
+    ENFORCE(_state == STATE_STR_ESCAPE,);       // XXX here or outside?
+    PRINT("STR-esc: " << _escapeStrSeq);
 }
 
 void Tty::processAttributes(const std::vector<int32_t> & args) {
@@ -562,49 +562,49 @@ void Tty::processAttributes(const std::vector<int32_t> & args) {
 
         switch (v) {
             case 0:
-                mObserver.ttySetBg(defaultBg());
-                mObserver.ttySetFg(defaultFg());
-                mObserver.ttyClearAttributes();
+                _observer.ttySetBg(defaultBg());
+                _observer.ttySetFg(defaultFg());
+                _observer.ttyClearAttributes();
                 break;
             case 1:
-                mObserver.ttyEnableAttribute(ATTRIBUTE_BOLD);
+                _observer.ttyEnableAttribute(ATTRIBUTE_BOLD);
                 break;
             case 3:
-                mObserver.ttyEnableAttribute(ATTRIBUTE_ITALIC);
+                _observer.ttyEnableAttribute(ATTRIBUTE_ITALIC);
                 break;
             case 4:
-                mObserver.ttyEnableAttribute(ATTRIBUTE_UNDERLINE);
+                _observer.ttyEnableAttribute(ATTRIBUTE_UNDERLINE);
                 break;
             case 5: // slow blink
             case 6: // rapid blink
-                mObserver.ttyEnableAttribute(ATTRIBUTE_BLINK);
+                _observer.ttyEnableAttribute(ATTRIBUTE_BLINK);
                 break;
             case 7:
-                mObserver.ttyEnableAttribute(ATTRIBUTE_REVERSE);
+                _observer.ttyEnableAttribute(ATTRIBUTE_REVERSE);
                 break;
             case 21:
             case 22:
-                mObserver.ttyDisableAttribute(ATTRIBUTE_BOLD);
+                _observer.ttyDisableAttribute(ATTRIBUTE_BOLD);
                 break;
             case 23:
-                mObserver.ttyDisableAttribute(ATTRIBUTE_ITALIC);
+                _observer.ttyDisableAttribute(ATTRIBUTE_ITALIC);
                 break;
             case 24:
-                mObserver.ttyDisableAttribute(ATTRIBUTE_UNDERLINE);
+                _observer.ttyDisableAttribute(ATTRIBUTE_UNDERLINE);
                 break;
             case 25:
             case 26:
-                mObserver.ttyDisableAttribute(ATTRIBUTE_BLINK);
+                _observer.ttyDisableAttribute(ATTRIBUTE_BLINK);
                 break;
             case 27:
-                mObserver.ttyDisableAttribute(ATTRIBUTE_REVERSE);
+                _observer.ttyDisableAttribute(ATTRIBUTE_REVERSE);
                 break;
             case 38:
                 if (i + 2 < args.size() && args[i + 1] == 5) {
                     i += 2;
                     int32_t v2 = args[i];
                     if (v2 >= 0 && v2 < 256) {
-                        mObserver.ttySetFg(v2);
+                        _observer.ttySetFg(v2);
                     }
                     else {
                         ERROR("Colour out of range: " << v2);
@@ -615,14 +615,14 @@ void Tty::processAttributes(const std::vector<int32_t> & args) {
                 }
                 break;
             case 39:
-                mObserver.ttySetFg(defaultFg());
+                _observer.ttySetFg(defaultFg());
                 break;
             case 48:
                 if (i + 2 < args.size() && args[i + 1] == 5) {
                     i += 2;
                     int32_t v2 = args[i];
                     if (v2 >= 0 && v2 < 256) {
-                        mObserver.ttySetBg(v2);
+                        _observer.ttySetBg(v2);
                     }
                     else {
                         ERROR("Colour out of range: " << v2);
@@ -633,24 +633,24 @@ void Tty::processAttributes(const std::vector<int32_t> & args) {
                 }
                 break;
             case 49:
-                mObserver.ttySetBg(defaultBg());
+                _observer.ttySetBg(defaultBg());
                 break;
             default:
                 if (v >= 30 && v < 38) {
                     // normal fg
-                    mObserver.ttySetFg(v - 30);
+                    _observer.ttySetFg(v - 30);
                 }
                 else if (v >= 40 && v < 48) {
                     // bright fg
-                    mObserver.ttySetBg(v - 40);
+                    _observer.ttySetBg(v - 40);
                 }
                 else if (v >= 90 && v < 98) {
                     // normal bg
-                    mObserver.ttySetFg(v - 90 + 8);
+                    _observer.ttySetFg(v - 90 + 8);
                 }
                 else if (v >= 100 && v < 108) {
                     // bright bg
-                    mObserver.ttySetBg(v - 100 + 8);
+                    _observer.ttySetBg(v - 100 + 8);
                 }
                 else {
                     ERROR("Unhandled Blah");
@@ -665,15 +665,15 @@ void Tty::processMode(bool priv, bool set, const std::vector<int32_t> & args) {
 }
 
 bool Tty::pollReap(int & exitCode, int msec) {
-    ASSERT(mPid != 0,);
+    ASSERT(_pid != 0,);
 
     for (int i = 0; i != msec; ++i) {
         int stat;
-        int rval = ::waitpid(mPid, &stat, WNOHANG);
+        int rval = ::waitpid(_pid, &stat, WNOHANG);
         ENFORCE_SYS(rval != -1, "::waitpid() failed.");
         if (rval != 0) {
-            ENFORCE(rval == mPid,);
-            mPid = 0;
+            ENFORCE(rval == _pid,);
+            _pid = 0;
             exitCode = WIFEXITED(stat) ? WEXITSTATUS(stat) : EXIT_FAILURE;
             return true;
         }
@@ -684,36 +684,36 @@ bool Tty::pollReap(int & exitCode, int msec) {
 }
 
 void Tty::waitReap(int & exitCode) {
-    ASSERT(mPid != 0,);
+    ASSERT(_pid != 0,);
 
     int stat;
-    ENFORCE_SYS(::waitpid(mPid, &stat, 0) == mPid,);
-    mPid = 0;
+    ENFORCE_SYS(::waitpid(_pid, &stat, 0) == _pid,);
+    _pid = 0;
     exitCode = WIFEXITED(stat) ? WEXITSTATUS(stat) : EXIT_FAILURE;
 }
 
 int Tty::close() {
     ASSERT(isOpen(),);
 
-    ENFORCE_SYS(::close(mFd) != -1,);
-    mFd = -1;
+    ENFORCE_SYS(::close(_fd) != -1,);
+    _fd = -1;
 
-    ::kill(mPid, SIGCONT);
-    ::kill(mPid, SIGPIPE);
+    ::kill(_pid, SIGCONT);
+    ::kill(_pid, SIGPIPE);
 
     int exitCode;
     if (pollReap(exitCode, 100)) { return exitCode; }
     PRINT("Sending SIGINT.");
-    ::kill(mPid, SIGINT);
+    ::kill(_pid, SIGINT);
     if (pollReap(exitCode, 100)) { return exitCode; }
     PRINT("Sending SIGTERM.");
-    ::kill(mPid, SIGTERM);
+    ::kill(_pid, SIGTERM);
     if (pollReap(exitCode, 100)) { return exitCode; }
     PRINT("Sending SIGQUIT.");
-    ::kill(mPid, SIGQUIT);
+    ::kill(_pid, SIGQUIT);
     if (pollReap(exitCode, 100)) { return exitCode; }
     PRINT("Sending SIGKILL.");
-    ::kill(mPid, SIGKILL);
+    ::kill(_pid, SIGKILL);
     waitReap(exitCode);
 }
 

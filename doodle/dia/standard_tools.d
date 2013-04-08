@@ -15,7 +15,7 @@ final class PanTool : Tool {
 
     override bool handleButtonPress(scope IViewport viewport, in ButtonEvent event) {
         if (event.buttonName == ButtonName.MIDDLE) {
-            mLastPosition = event.screenPoint;
+            _lastPosition = event.screenPoint;
             return true;
         }
         else {
@@ -25,8 +25,8 @@ final class PanTool : Tool {
 
     override bool handleMotion(scope IViewport viewport, in MotionEvent event) {
         if (event.mask.isSet(Modifier.MIDDLE_BUTTON)) {
-            viewport.panRelative(mLastPosition - event.screenPoint);
-            mLastPosition = event.screenPoint;
+            viewport.panRelative(_lastPosition - event.screenPoint);
+            _lastPosition = event.screenPoint;
 
             return true;
         }
@@ -91,7 +91,7 @@ final class PanTool : Tool {
     }
 
     private {
-        Point mLastPosition;
+        Point _lastPosition;
         static immutable SCROLL_AMOUNT = 60.0;
         static immutable ARROW_AMOUNT = 30.0;
         static immutable PAGE_AMOUNT = 240.0;
