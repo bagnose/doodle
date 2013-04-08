@@ -65,7 +65,8 @@ protected:
     void ttyBegin() throw ();
     void ttyControl(Control control) throw ();
     void ttyMoveCursor(uint16_t row, uint16_t col) throw ();
-    void ttyClear(Tty::Clear clear) throw ();
+    void ttyClearLine(Tty::ClearLine clear) throw ();
+    void ttyClearScreen(Tty::ClearScreen clear) throw ();
     void ttySetFg(uint8_t fg) throw ();
     void ttySetBg(uint8_t bg) throw ();
     void ttyClearAttributes() throw ();

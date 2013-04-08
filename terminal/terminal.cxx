@@ -81,14 +81,38 @@ void Terminal::ttyMoveCursor(uint16_t row, uint16_t col) throw () {
     _cursorCol = col;
 }
 
-void Terminal::ttyClear(Tty::Clear clear) throw () {
+void Terminal::ttyClearLine(Tty::ClearLine clear) throw () {
     switch (clear) {
-        case Tty::CLEAR_BELOW:
+        case Tty::CLEAR_LINE_RIGHT:
+            for (uint16_t c = _cursorCol + 1; c != _buffer.getCols(); ++c) {
+                _buffer.overwriteChar(Char::null(), _cursorRow, c);
+            }
             break;
-        case Tty::CLEAR_ABOVE:
+        case Tty::CLEAR_LINE_LEFT:
+            for (uint16_t c = 0; c != _cursorCol; ++c) {
+                _buffer.overwriteChar(Char::null(), _cursorRow, c);
+            }
             break;
-        case Tty::CLEAR_ALL:
-            _buffer.clear();
+        case Tty::CLEAR_LINE_ALL:
+            _buffer.clearLine(_cursorRow);
+            break;
+    }
+}
+
+void Terminal::ttyClearScreen(Tty::ClearScreen clear) throw () {
+    switch (clear) {
+        case Tty::CLEAR_SCREEN_BELOW:
+            for (uint16_t r = _cursorRow + 1; r != _buffer.getRows(); ++r) {
+                _buffer.clearLine(r);
+            }
+            break;
+        case Tty::CLEAR_SCREEN_ABOVE:
+            for (uint16_t r = 0; r != _cursorRow; ++r) {
+                _buffer.clearLine(r);
+            }
+            break;
+        case Tty::CLEAR_SCREEN_ALL:
+            _buffer.clearAll();
             _cursorCol = _cursorRow = 0;
             break;
     }
@@ -121,16 +145,15 @@ void Terminal::ttyDisableAttribute(Attribute attribute) throw () {
 
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
     //PRINT("UTF-8: '" << std::string(s, s + length) << "'");
-    _buffer.insertChar(Char::utf8(s, length, _attributes, 0, _fg, _bg),
-                       _cursorRow, _cursorCol);
+    _buffer.overwriteChar(Char::utf8(s, length, _attributes, 0, _fg, _bg),
+                          _cursorRow, _cursorCol);
     ++_cursorCol;
 
     if (_cursorCol == _buffer.getCols()) {
-        if (_cursorRow == _buffer.getRows() - 1) {
+        ++_cursorRow;
+        if (_cursorRow == _buffer.getRows()) {
             _buffer.addLine();
-        }
-        else {
-            ++_cursorRow;
+            --_cursorRow;
         }
         _cursorCol = 0;
     }

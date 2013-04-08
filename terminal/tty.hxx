@@ -20,10 +20,16 @@ enum Control {
 
 class Tty : protected Uncopyable {
 public:
-    enum Clear {
-        CLEAR_BELOW,
-        CLEAR_ABOVE,
-        CLEAR_ALL
+    enum ClearScreen {
+        CLEAR_SCREEN_BELOW,
+        CLEAR_SCREEN_ABOVE,
+        CLEAR_SCREEN_ALL
+    };
+
+    enum ClearLine {
+        CLEAR_LINE_RIGHT,
+        CLEAR_LINE_LEFT,
+        CLEAR_LINE_ALL
     };
 
     typedef std::vector<std::string> Command;
@@ -36,7 +42,8 @@ public:
         virtual void ttyControl(Control control) throw () = 0;
         // escapes
         virtual void ttyMoveCursor(uint16_t row, uint16_t col) throw () = 0;
-        virtual void ttyClear(Clear clear) throw () = 0;
+        virtual void ttyClearLine(ClearLine clear) throw () = 0;
+        virtual void ttyClearScreen(ClearScreen clear) throw () = 0;
         virtual void ttySetFg(uint8_t fg) throw () = 0;
         virtual void ttySetBg(uint8_t bg) throw () = 0;
         virtual void ttyClearAttributes() throw () = 0;
@@ -60,6 +67,7 @@ private:
         STATE_ESCAPE_START,
         STATE_CSI_ESCAPE,
         STATE_STR_ESCAPE,
+        STATE_ESCAPE_START_STR,
         STATE_TEST_ESCAPE
     };
 
@@ -69,7 +77,10 @@ private:
     pid_t               mPid;
     bool                mDumpWrites;
     State               mState;
+    // FIXME think about unifying these
     std::string         mEscapeSeq;
+    char                mEscapeStrType;
+    std::string         mEscapeStr;
     std::vector<char>   mReadBuffer;
     std::vector<char>   mWriteBuffer;
 
@@ -123,8 +134,11 @@ protected:
     void processChar(const char * s, utf8::Length len);
     void processControl(char c);
     void processEscape(char c);
+    void processEscapeStr(char c);
     void processCsiEscape();
-    void processBlah(const std::vector<int32_t> & args);
+    void processStrEscape();
+    void processAttributes(const std::vector<int32_t> & args);
+    void processMode(bool priv, bool set, const std::vector<int32_t> & args);
 
     bool pollReap(int & exitCode, int msec);
     void waitReap(int & exitCode);
@@ -133,7 +147,8 @@ protected:
     int  close();
 };
 
-std::ostream & operator << (std::ostream & ost, Control    control);
-std::ostream & operator << (std::ostream & ost, Tty::Clear clear);
+std::ostream & operator << (std::ostream & ost, Control control);
+std::ostream & operator << (std::ostream & ost, Tty::ClearScreen clear);
+std::ostream & operator << (std::ostream & ost, Tty::ClearLine   clear);
 
 #endif // TTY__HPP

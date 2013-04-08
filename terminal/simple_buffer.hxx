@@ -35,6 +35,10 @@ class SimpleBuffer {
             _chars.erase(_chars.begin() + col);
             _chars.push_back(Char::ascii(' '));
         }
+
+        void clearAll() {
+            std::fill(_chars.begin(), _chars.end(), Char::null());
+        }
     };
 
     std::deque<Line> _lines;
@@ -84,8 +88,15 @@ public:
         _lines.pop_front();
     }
 
-    void clear() {
-        resize(getRows(), getCols());
+    void clearLine(uint16_t row) {
+        ASSERT(row < getRows(),);
+        _lines[row].clearAll();
+    }
+
+    void clearAll() {
+        for (auto & line : _lines) {
+            line.clearAll();
+        }
     }
 };
 

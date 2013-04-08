@@ -260,30 +260,53 @@ void Tty::processBuffer() {
 void Tty::processChar(const char * s, utf8::Length length) {
     if (length == utf8::L1) {
         char ascii = s[0];
-        bool isControl = ascii < '\x20' || ascii == '\x7f';
 
-        if (isControl) {
-            processControl(ascii);
-        }
-        else if (mState == STATE_ESCAPE_START) {
-            processEscape(ascii);
-        }
-        else if (mState == STATE_CSI_ESCAPE) {
-            mEscapeSeq.push_back(ascii);
-
-            if (ascii >= 0x40 && ascii <= 0x7e) {
-                processCsiEscape();
-                mState = STATE_NORMAL;
-                mEscapeSeq.clear();
+        if (mState == STATE_STR_ESCAPE) {
+            switch (ascii) {
+                case '\x1b':
+                    mState = STATE_ESCAPE_START_STR;
+                    break;
+                case '\a':      // xterm backwards compatibility
+                    processStrEscape();
+                    mState = STATE_NORMAL;
+                    mEscapeStr.clear();
+                    break;
+                default:
+                    // XXX upper limit??
+                    mEscapeStr.push_back(ascii);
+                    break;
             }
         }
         else {
-            mObserver.ttyUtf8(s, length);
+            bool isControl = ascii < '\x20' || ascii == '\x7f';
+
+            if (isControl) {
+                ASSERT(mState == STATE_NORMAL,);
+                processControl(ascii);
+            }
+            else if (mState == STATE_ESCAPE_START) {
+                processEscape(ascii);
+            }
+            else if (mState == STATE_ESCAPE_START_STR) {
+                processEscapeStr(ascii);
+            }
+            else if (mState == STATE_CSI_ESCAPE) {
+                mEscapeSeq.push_back(ascii);
+
+                if (ascii >= 0x40 && ascii <= 0x7e) {
+                    processCsiEscape();
+                    mState = STATE_NORMAL;
+                    mEscapeSeq.clear();
+                }
+            }
+            else {
+                mObserver.ttyUtf8(s, length);
+            }
         }
     }
     else {
         if (mState != STATE_NORMAL) {
-            ERROR("Got UTF-8 whilst in escape seq.");
+            ERROR("Got UTF-8 whilst state: " << mState);
         }
 
         mObserver.ttyUtf8(s, length);
@@ -317,7 +340,7 @@ void Tty::processControl(char c) {
             mState = STATE_ESCAPE_START;
             break;
         default:
-            PRINT("Ignored char: " << int(c));
+            PRINT("Ignored control char: " << int(c));
             break;
     }
 }
@@ -339,7 +362,8 @@ void Tty::processEscape(char c) {
         case '^': /* PM -- Privacy Message */
         case ']': /* OSC -- Operating System Command */
         case 'k': /* old title set compatibility */
-            // ???
+            mEscapeStrType = c;
+            mState = STATE_STR_ESCAPE;
             break;
         case '(':
             // alt char set
@@ -390,19 +414,38 @@ void Tty::processEscape(char c) {
             mState = STATE_NORMAL;
             break;
         case '\\': // ST -- Stop
+            if (mState == STATE_STR_ESCAPE) {
+                processStrEscape();
+                mEscapeStr.clear();
+            }
             mState = STATE_NORMAL;
             break;
         case 'm':
             break;
         default:
-            ERROR("Unknown escape sequence.");
+            ERROR("Unknown escape sequence: " << c);
             mState = STATE_NORMAL;
             break;
     }
 }
 
+void Tty::processEscapeStr(char c) {
+    ASSERT(mState == STATE_ESCAPE_START_STR,);
+
+    switch (c) {
+        case '\\':
+            processStrEscape();
+            break;
+        default:
+            break;
+    }
+
+    mState = STATE_NORMAL;
+}
+
 void Tty::processCsiEscape() {
-    ENFORCE(mState == STATE_CSI_ESCAPE,);
+    ENFORCE(mState == STATE_CSI_ESCAPE,);       // XXX here or outside?
+    ASSERT(!mEscapeSeq.empty(),);
     //PRINT("CSI-esc: " << mEscapeSeq);
 
     size_t i = 0;
@@ -446,7 +489,25 @@ void Tty::processCsiEscape() {
         char mode = mEscapeSeq[i];
         switch (mode) {
             case 'h':
-                PRINT(<<"CSI: Set terminal mode: " << strArgs(args));
+                //PRINT(<<"CSI: Set terminal mode: " << strArgs(args));
+                processMode(priv, true, args);
+                break;
+            case 'l':
+                //PRINT(<<"CSI: Reset terminal mode: " << strArgs(args));
+                processMode(priv, false, args);
+                break;
+            case 'K':   // EL - Clear line
+                switch (nthArg(args, 0)) {
+                    case 0: // right
+                        mObserver.ttyClearLine(CLEAR_LINE_RIGHT);
+                        break;
+                    case 1: // left
+                        mObserver.ttyClearLine(CLEAR_LINE_LEFT);
+                        break;
+                    case 2: // all
+                        mObserver.ttyClearLine(CLEAR_LINE_ALL);
+                        break;
+                }
                 break;
             case 'g':
                 PRINT(<<"CSI: Tabulation clear");
@@ -461,30 +522,27 @@ void Tty::processCsiEscape() {
                 break;
             //case '!':
                 //break;
-            case 'l':
-                PRINT(<<"CSI: Reset terminal mode: priv=" << priv << ", args: " << strArgs(args));
-                break;
             case 'J':
                 // Clear screen.
                 switch (nthArg(args, 0)) {
                     case 0:
                         // below
-                        mObserver.ttyClear(CLEAR_BELOW);
+                        mObserver.ttyClearScreen(CLEAR_SCREEN_BELOW);
                         break;
                     case 1:
                         // above
-                        mObserver.ttyClear(CLEAR_ABOVE);
+                        mObserver.ttyClearScreen(CLEAR_SCREEN_ABOVE);
                         break;
                     case 2:
                         // all
-                        mObserver.ttyClear(CLEAR_ALL);
+                        mObserver.ttyClearScreen(CLEAR_SCREEN_ALL);
                         break;
                     default:
                         FATAL("");
                 }
                 break;
             case 'm':
-                processBlah(args);
+                processAttributes(args);
                 break;
             default:
                 PRINT(<<"CSI: UNKNOWN: mode=" << mode << ", priv=" << priv << ", args: " << strArgs(args));
@@ -493,7 +551,12 @@ void Tty::processCsiEscape() {
     }
 }
 
-void Tty::processBlah(const std::vector<int32_t> & args) {
+void Tty::processStrEscape() {
+    ENFORCE(mState == STATE_STR_ESCAPE,);       // XXX here or outside?
+    PRINT("STR-esc: " << mEscapeStr);
+}
+
+void Tty::processAttributes(const std::vector<int32_t> & args) {
     for (size_t i = 0; i != args.size(); ++i) {
         int32_t v = args[i];
 
@@ -596,6 +659,11 @@ void Tty::processBlah(const std::vector<int32_t> & args) {
     }
 }
 
+void Tty::processMode(bool priv, bool set, const std::vector<int32_t> & args) {
+    PRINT("NYI: processMode: priv=" << priv << ", set=" <<
+          set << ", args=" << strArgs(args));
+}
+
 bool Tty::pollReap(int & exitCode, int msec) {
     ASSERT(mPid != 0,);
 
@@ -666,13 +734,26 @@ std::ostream & operator << (std::ostream & ost, Control control) {
     FATAL(<< static_cast<int>(control));
 }
 
-std::ostream & operator << (std::ostream & ost, Tty::Clear clear) {
+std::ostream & operator << (std::ostream & ost, Tty::ClearScreen clear) {
     switch (clear) {
-        case Tty::CLEAR_BELOW:
+        case Tty::CLEAR_SCREEN_BELOW:
             return ost << "BELOW";
-        case Tty::CLEAR_ABOVE:
+        case Tty::CLEAR_SCREEN_ABOVE:
             return ost << "ABOVE";
-        case Tty::CLEAR_ALL:
+        case Tty::CLEAR_SCREEN_ALL:
+            return ost << "ALL";
+    }
+
+    FATAL(<< static_cast<int>(clear));
+}
+
+std::ostream & operator << (std::ostream & ost, Tty::ClearLine clear) {
+    switch (clear) {
+        case Tty::CLEAR_LINE_RIGHT:
+            return ost << "RIGHT";
+        case Tty::CLEAR_LINE_LEFT:
+            return ost << "LEFT";
+        case Tty::CLEAR_LINE_ALL:
             return ost << "ALL";
     }
 
