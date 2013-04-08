@@ -77,10 +77,16 @@ private:
     pid_t               _pid;
     bool                _dumpWrites;
     State               _state;
-    // FIXME think about unifying these
-    std::string         _escapeCsiSeq;
-    char                _escapeStrType;
-    std::string         _escapeStrSeq;
+
+    struct {
+        std::string seq;
+    }                   _escapeCsi;
+
+    struct {
+        char        type;
+        std::string seq;
+    }                   _escapeStr;
+
     std::vector<char>   _readBuffer;
     std::vector<char>   _writeBuffer;
 

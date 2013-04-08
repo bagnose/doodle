@@ -24,12 +24,7 @@ std::string strArgs(const std::vector<int32_t> & args) {
     return str.str();
 }
 
-int32_t nthArg(const std::vector<int32_t> & args, size_t n) {
-    ASSERT(n < args.size(),);
-    return args[n];
-}
-
-int32_t nthArgFallback(const std::vector<int32_t> & args, size_t n, int32_t fallback) {
+int32_t nthArg(const std::vector<int32_t> & args, size_t n, int32_t fallback = 0) {
     if (n < args.size()) {
         return args[n];
     }
@@ -263,50 +258,69 @@ void Tty::processChar(const char * s, utf8::Length length) {
 
         if (_state == STATE_STR_ESCAPE) {
             switch (ascii) {
-                case '\x1b':
+                case '\x1B':
                     _state = STATE_ESCAPE_START_STR;
                     break;
                 case '\a':      // xterm backwards compatibility
                     processStrEscape();
                     _state = STATE_NORMAL;
-                    _escapeStrSeq.clear();
+                    _escapeStr.seq.clear();
                     break;
                 default:
                     // XXX upper limit??
-                    _escapeStrSeq.push_back(ascii);
+                    _escapeStr.seq.push_back(ascii);
                     break;
             }
         }
+        else if (_state == STATE_ESCAPE_START_STR) {
+            if (ascii == '\\') {
+                processStrEscape();
+            }
+            _state = STATE_NORMAL;
+            _escapeStr.seq.clear();
+        }
         else {
-            bool isControl = ascii < '\x20' || ascii == '\x7f';
-
-            if (isControl) {
+            if (ascii == '\x1B') {
+                ASSERT(_state == STATE_NORMAL,);
+                _state = STATE_ESCAPE_START;
+            }
+            else if (ascii < '\x20' || ascii == '\x7F') {
                 ASSERT(_state == STATE_NORMAL,);
                 processControl(ascii);
             }
-            else if (_state == STATE_ESCAPE_START) {
-                processEscape(ascii);
-            }
-            else if (_state == STATE_ESCAPE_START_STR) {
-                processEscapeStr(ascii);
-            }
-            else if (_state == STATE_CSI_ESCAPE) {
-                _escapeCsiSeq.push_back(ascii);
-
-                if (ascii >= 0x40 && ascii < 0x7f) {
-                    processCsiEscape();
-                    _state = STATE_NORMAL;
-                    _escapeCsiSeq.clear();
-                }
-            }
             else {
-                _observer.ttyUtf8(s, length);
+                switch (_state) {
+                    case STATE_NORMAL:
+                        _observer.ttyUtf8(&ascii, utf8::L1);
+                        break;
+                    case STATE_ESCAPE_START:
+                        processEscape(ascii);
+                        break;
+                    case STATE_CSI_ESCAPE:
+                        _escapeCsi.seq.push_back(ascii);
+
+                        if (ascii >= '\x40' && ascii < '\x7F') {
+                            processCsiEscape();
+                            _state = STATE_NORMAL;
+                            _escapeCsi.seq.clear();
+                        }
+                        break;
+                    case STATE_STR_ESCAPE:
+                        FATAL("Unreachable");
+                        break;
+                    case STATE_ESCAPE_START_STR:
+                        FATAL("Unreachable");
+                        break;
+                    case STATE_TEST_ESCAPE:
+                        FATAL("NYI");
+                        break;
+                }
             }
         }
     }
     else {
         if (_state != STATE_NORMAL) {
-            ERROR("Got UTF-8 whilst state: " << _state);
+            ERROR("Got UTF-8 whilst in state: " << _state);
         }
 
         _observer.ttyUtf8(s, length);
@@ -334,11 +348,6 @@ void Tty::processControl(char c) {
         case '\n':
             _observer.ttyControl(CONTROL_LF);
             break;
-        case '\x1b':
-            // ESC start
-            //PRINT("Escape sequence started.");
-            _state = STATE_ESCAPE_START;
-            break;
         default:
             PRINT("Ignored control char: " << int(c));
             break;
@@ -362,7 +371,7 @@ void Tty::processEscape(char c) {
         case '^': /* PM -- Privacy Message */
         case ']': /* OSC -- Operating System Command */
         case 'k': /* old title set compatibility */
-            _escapeStrType = c;
+            _escapeStr.type = c;
             _state = STATE_STR_ESCAPE;
             break;
         case '(':
@@ -416,7 +425,7 @@ void Tty::processEscape(char c) {
         case '\\': // ST -- Stop
             if (_state == STATE_STR_ESCAPE) {
                 processStrEscape();
-                _escapeStrSeq.clear();
+                _escapeStr.seq.clear();
             }
             _state = STATE_NORMAL;
             break;
@@ -445,22 +454,22 @@ void Tty::processEscapeStr(char c) {
 
 void Tty::processCsiEscape() {
     ENFORCE(_state == STATE_CSI_ESCAPE,);       // XXX here or outside?
-    ASSERT(!_escapeCsiSeq.empty(),);
-    //PRINT("CSI-esc: " << _escapeCsiSeq);
+    ASSERT(!_escapeCsi.seq.empty(),);
+    PRINT("CSI-esc: " << _escapeCsi.seq);
 
     size_t i = 0;
     bool priv = false;
     std::vector<int32_t> args;
 
-    if (_escapeCsiSeq.front() == '?') {
+    if (_escapeCsi.seq.front() == '?') {
         ++i;
         priv = true;
     }
 
     bool inArg = false;
 
-    while (i != _escapeCsiSeq.size()) {
-        char c = _escapeCsiSeq[i];
+    while (i != _escapeCsi.seq.size()) {
+        char c = _escapeCsi.seq[i];
 
         if (c >= '0' && c <= '9') {
             if (!inArg) {
@@ -482,11 +491,11 @@ void Tty::processCsiEscape() {
         ++i;
     }
 
-    if (i == _escapeCsiSeq.size()) {
-        ERROR("Bad CSI: " << _escapeCsiSeq);
+    if (i == _escapeCsi.seq.size()) {
+        ERROR("Bad CSI: " << _escapeCsi.seq);
     }
     else {
-        char mode = _escapeCsiSeq[i];
+        char mode = _escapeCsi.seq[i];
         switch (mode) {
             case 'h':
                 //PRINT(<<"CSI: Set terminal mode: " << strArgs(args));
@@ -514,8 +523,8 @@ void Tty::processCsiEscape() {
                 break;
             case 'H':
             case 'f': {
-                uint16_t row = nthArgFallback(args, 0, 1) - 1;
-                uint16_t col = nthArgFallback(args, 1, 1) - 1;
+                uint16_t row = nthArg(args, 0, 1) - 1;
+                uint16_t col = nthArg(args, 1, 1) - 1;
                 //PRINT("CSI: Move cursor: row=" << row << ", col=" << col);
                 _observer.ttyMoveCursor(row, col);
             }
@@ -553,7 +562,7 @@ void Tty::processCsiEscape() {
 
 void Tty::processStrEscape() {
     ENFORCE(_state == STATE_STR_ESCAPE,);       // XXX here or outside?
-    PRINT("STR-esc: " << _escapeStrSeq);
+    PRINT("STR-esc: " << _escapeStr.seq);
 }
 
 void Tty::processAttributes(const std::vector<int32_t> & args) {
