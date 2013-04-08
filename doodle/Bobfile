@@ -1,1 +1,3 @@
-contain core tk dia fig gtk main play ;
+refer misc ;
+
+contain core tk dia fig gtk main ;
