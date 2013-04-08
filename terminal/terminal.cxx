@@ -53,11 +53,24 @@ void Terminal::ttyControl(Control control) throw () {
     //PRINT("Control: " << control);
     switch (control) {
         case CONTROL_BEL:
+            PRINT("BEL!!");
             break;
         case CONTROL_HT:
+            // Advance to the next tab or the last column.
             for (; _cursorCol != _buffer.getCols(); ++_cursorCol) {
                 if (_tabs[_cursorCol]) {
                     break;
+                }
+            }
+
+            if (_cursorCol == _buffer.getCols()) {
+                // XXX is this right? CR/LF
+                _cursorCol = 0;
+                if (_cursorRow == _buffer.getRows() - 1) {
+                    _buffer.addLine();
+                }
+                else {
+                    ++_cursorRow;
                 }
             }
             break;

@@ -332,22 +332,35 @@ void Tty::processControl(char c) {
     ASSERT(_state == STATE_NORMAL,);
 
     switch (c) {
-        case '\a':
+        case '\a':      // BEL
             _observer.ttyControl(CONTROL_BEL);
             break;
-        case '\t':
+        case '\t':      // HT
             _observer.ttyControl(CONTROL_HT);
             break;
-        case '\b':
+        case '\b':      // BS
             _observer.ttyControl(CONTROL_BS);
             break;
-        case '\r':
+        case '\r':      // CR
             _observer.ttyControl(CONTROL_CR);
             break;
-        case '\f':
-        case '\v':
-        case '\n':
+        case '\f':      // FF
+        case '\v':      // VT
+        case '\n':      // LF
             _observer.ttyControl(CONTROL_LF);
+            break;
+        case '\x0E':    // SO
+        case '\x0F':    // SI
+            // Ignore
+            break;
+        case '\x1A':    // SUB
+        case '\x18':    // CAN
+            // TODO reset escape states - assertion prevents this
+            break;
+        case '\x05':    // ENQ
+        case '\0':      // NUL
+        case '\x11':    // DC1/XON
+        case '\x13':    // DC3/XOFF
             break;
         default:
             PRINT("Ignored control char: " << int(c));
@@ -367,24 +380,24 @@ void Tty::processEscape(char c) {
             // test
             _state = STATE_TEST_ESCAPE;
             break;
-        case 'P':
-        case '_': /* APC -- Application Program Command */
-        case '^': /* PM -- Privacy Message */
-        case ']': /* OSC -- Operating System Command */
-        case 'k': /* old title set compatibility */
+        case 'P':   // DCS
+        case '_':   // APC -- Application Program Command
+        case '^':   // PM  -- Privacy Message
+        case ']':   // OSC -- Operating System Command
+        case 'k':   // old title set compatibility
             _escapeStr.type = c;
             _state = STATE_STR_ESCAPE;
             break;
-        case '(':
-            // alt char set
+        case '(':   // Set primary charset G0
+            //_altCharSet = true;           XXX
             break;
-        case ')':
-        case '*':
-        case '+':
+        case ')':   // Set secondary charset G1
+        case '*':   // Set secondary charset G1
+        case '+':   // Set secondary charset G1
             _state = STATE_NORMAL;
             break;
         case 'D':   // IND - linefeed
-            // TODO
+            _observer.ttyControl(CONTROL_LF);       // XXX Right??
             _state = STATE_NORMAL;
             break;
         case 'E':   // NEL - next line
@@ -462,6 +475,10 @@ void Tty::processCsiEscape() {
     bool priv = false;
     std::vector<int32_t> args;
 
+    //
+    // Parse the arguments.
+    //
+
     if (_escapeCsi.seq.front() == '?') {
         ++i;
         priv = true;
@@ -491,6 +508,10 @@ void Tty::processCsiEscape() {
 
         ++i;
     }
+
+    //
+    // Handle the sequence.
+    //
 
     if (i == _escapeCsi.seq.size()) {
         ERROR("Bad CSI: " << _escapeCsi.seq);
