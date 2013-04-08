@@ -27,9 +27,9 @@ class AttributeSet {
 public:
     AttributeSet() : _bits(0) {}
 
-    void clear()                        { _bits = 0; }
-    void set(Attribute attribute)       { _bits |= bit(attribute); }
-    void unSet(Attribute attribute)     { _bits &= ~bit(attribute); }
+    void clear()                        { _bits  =  0;                   }
+    void set(Attribute attribute)       { _bits |=  bit(attribute);      }
+    void unSet(Attribute attribute)     { _bits &= ~bit(attribute);      }
     bool get(Attribute attribute) const { return _bits & bit(attribute); }
 };
 

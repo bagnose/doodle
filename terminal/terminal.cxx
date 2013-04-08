@@ -166,6 +166,19 @@ void Terminal::ttyDisableAttribute(Attribute attribute) throw () {
     _attributes.unSet(attribute);
 }
 
+void Terminal::ttySetTabStop() throw () {
+    PRINT("Setting tab stop at: " << _cursorCol);
+    _tabs[_cursorCol] = true;
+}
+
+void Terminal::ttyEnableMode(Tty::Mode mode) throw () {
+    // TODO
+}
+
+void Terminal::ttyDisableMode(Tty::Mode mode) throw () {
+    // TODO
+}
+
 void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
     //PRINT("UTF-8: '" << std::string(s, s + length) << "'");
     _buffer.overwriteChar(Char::utf8(s, length, _attributes, 0, _fg, _bg),

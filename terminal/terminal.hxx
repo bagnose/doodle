@@ -74,6 +74,9 @@ protected:
     void ttyClearAttributes() throw ();
     void ttyEnableAttribute(Attribute attribute) throw ();
     void ttyDisableAttribute(Attribute attribute) throw ();
+    void ttySetTabStop() throw ();
+    void ttyEnableMode(Tty::Mode mode) throw ();
+    void ttyDisableMode(Tty::Mode mode) throw ();
     void ttyUtf8(const char * s, utf8::Length length) throw ();
     void ttyEnd() throw ();
 

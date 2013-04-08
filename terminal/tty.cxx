@@ -397,42 +397,47 @@ void Tty::processEscape(char c) {
             _state = STATE_NORMAL;
             break;
         case 'D':   // IND - linefeed
-            _observer.ttyControl(CONTROL_LF);       // XXX Right??
+            FATAL("NYI st.c:2169");
             _state = STATE_NORMAL;
             break;
         case 'E':   // NEL - next line
-            // TODO
+            FATAL("NYI st.c:2177");
             _state = STATE_NORMAL;
             break;
         case 'H':   // HTS - Horizontal tab stop.
+            _observer.ttySetTabStop();
             _state = STATE_NORMAL;
             break;
         case 'M':   // RI - Reverse index.
-            // TODO
+            FATAL("NYI st.c:2185");
             _state = STATE_NORMAL;
             break;
         case 'Z':   // DECID -- Identify Terminal
+            FATAL("NYI st.c:2194");
             //ttywrite(VT102ID, sizeof(VT102ID) - 1);
             _state = STATE_NORMAL;
             break;
         case 'c':   // RIS - Reset to initial state
+            FATAL("NYI st.c:2197");
             //treset();
             //xresettitle();
             _state = STATE_NORMAL;
             break;
         case '=':   // DECPAM - Application keypad
-            //term.mode |= MODE_APPKEYPAD;
+            _observer.ttyEnableMode(MODE_APPKEYPAD);
             _state = STATE_NORMAL;
             break;
         case '>':   // DECPNM - Normal keypad
-            //term.mode &= ~MODE_APPKEYPAD;
+            _observer.ttyDisableMode(MODE_APPKEYPAD);
             _state = STATE_NORMAL;
             break;
         case '7':   // DECSC - Save Cursor
+            FATAL("NYI st.c:2210");
             //tcursor(CURSOR_SAVE);
             _state = STATE_NORMAL;
             break;
         case '8':   // DECRC - Restore Cursor
+            FATAL("NYI st.c:2214");
             //tcursor(CURSOR_LOAD);
             _state = STATE_NORMAL;
             break;
