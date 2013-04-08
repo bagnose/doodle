@@ -48,7 +48,11 @@ protected:
 
             // Handle _one_ I/O.
 
-            if (FD_ISSET(XConnectionNumber(mDisplay), &readFds)) {
+            if (selectOnWrite && FD_ISSET(mWindow.getFd(), &writeFds)) {
+                PRINT("window write event");
+                mWindow.write();
+            }
+            else if (FD_ISSET(XConnectionNumber(mDisplay), &readFds)) {
                 //PRINT("xevent");
                 xevent();
             }
@@ -56,9 +60,8 @@ protected:
                 //PRINT("window read event");
                 mWindow.read();
             }
-            else if (selectOnWrite && FD_ISSET(mWindow.getFd(), &writeFds)) {
-                //PRINT("window write event");
-                mWindow.write();
+            else {
+                FATAL("Unreachable");
             }
         }
     }
@@ -124,17 +127,16 @@ int main(int argc, char * argv[]) {
     // -   master read
     // -   master write
 
-    //std::string fontName = "inconsolata:pixelsize=16"; 
-    std::string fontName = "inconsolata:pixelsize=18"; 
-    std::string geometryStr;
+    std::string fontName = "inconsolata:pixelsize=16";
+    std::string  geometryStr;
     Tty::Command command;
-    bool accumulateCommand = false;
+    bool         accumulateCommand = false;
 
     for (int i = 1; i != argc; ++i) {
         std::string arg = argv[i];
-        if (accumulateCommand) { command.push_back(arg); }
-        else if (arg == "--execute") { accumulateCommand = true; }
-        else if (argMatch(arg, "font", fontName)) { }
+        if      (accumulateCommand)                      { command.push_back(arg);   }
+        else if (arg == "--execute")                     { accumulateCommand = true; }
+        else if (argMatch(arg, "font", fontName))        {}
         else if (argMatch(arg, "geometry", geometryStr)) {}
         else { FATAL("Unrecognised argument: " << arg); }
     }
@@ -164,6 +166,7 @@ int main(int argc, char * argv[]) {
     Window    root     = XRootWindowOfScreen(screen);
 
     {
+        // RAII objects.
         X_ColorSet      colorSet(display, visual, colormap);
         X_FontSet       fontSet(display, fontName);
         X_Window        window(display, root, screen, colorSet, fontSet, command);

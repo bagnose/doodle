@@ -70,9 +70,8 @@ X_Window::~X_Window() {
 
 void X_Window::keyPress(XKeyEvent & event) {
     uint8_t  state   = event.state;
-    //uint16_t keycode = event.keycode;
+    uint16_t keycode = event.keycode;
 
-    /*
     std::ostringstream maskStr;
     if (state & ShiftMask)   maskStr << " SHIFT";
     if (state & LockMask)    maskStr << " LOCK";
@@ -82,16 +81,13 @@ void X_Window::keyPress(XKeyEvent & event) {
     if (state & Mod3Mask)    maskStr << " MOD3";
     if (state & Mod4Mask)    maskStr << " WIN";
     if (state & Mod5Mask)    maskStr << " MOD5";
-    */
 
     char   buffer[16];
     KeySym keysym;
 
     int len = XLookupString(&event, buffer, sizeof buffer, &keysym, nullptr);
-    /*
-       PRINT(<< "keycode=" << keycode << " mask=(" << maskStr.str() << ") " <<
-       " str='" << std::string(buffer, buffer + len) << "'" << " len=" << len);
-       */
+    PRINT(<< "keycode=" << keycode << " mask=(" << maskStr.str() << ") " <<
+          " str='" << std::string(buffer, buffer + len) << "'" << " len=" << len);
 
     if (len > 0) {
         _terminal->enqueueWrite(buffer, len);
@@ -154,7 +150,7 @@ void X_Window::configure(XConfigureEvent & event) {
     draw(0, 0, _width, _height);
 }
 
-void X_Window::rowCol2XY(uint16_t col, size_t row,
+void X_Window::rowCol2XY(uint16_t row, size_t col,
                          uint16_t & x, uint16_t & y) const {
     x = BORDER_THICKNESS + col * _fontSet.getWidth();
     y = BORDER_THICKNESS + row * _fontSet.getHeight();
@@ -174,7 +170,7 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
             if (!ch.isNull()) {
                 // PRINT(<<ch);
                 uint16_t x, y;
-                rowCol2XY(c, r, x, y);
+                rowCol2XY(r, c, x, y);
 
                 const XftColor * fgColor = _colorSet.getIndexedColor(ch.fg());
                 const XftColor * bgColor = _colorSet.getIndexedColor(ch.bg());
@@ -205,7 +201,7 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
 
     {
         uint16_t x, y;
-        rowCol2XY(_terminal->cursorCol(), _terminal->cursorRow(), x, y);
+        rowCol2XY(_terminal->cursorRow(), _terminal->cursorCol(), x, y);
         XftDrawStringUtf8(xftDraw,
                           _colorSet.getCursorColor(),
                           _fontSet.getNormal(),
@@ -219,12 +215,12 @@ void X_Window::draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih) {
     XFlush(_display);
 }
 
-// Buffer::IObserver implementation:
+// Terminal::IObserver implementation:
 
 void X_Window::terminalBegin() throw () {
 }
 
-void X_Window::damageAll() throw () {
+void X_Window::terminalDamageAll() throw () {
     _damage = true;
 }
 
@@ -233,4 +229,8 @@ void X_Window::terminalEnd() throw () {
         draw(0, 0, _width, _height);
         _damage = false;
     }
+}
+
+void X_Window::terminalChildExited(int exitStatus) throw () {
+    PRINT("Child exited: " << exitStatus);
 }

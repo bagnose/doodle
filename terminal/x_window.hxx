@@ -62,11 +62,12 @@ protected:
 
     void draw(uint16_t ix, uint16_t iy, uint16_t iw, uint16_t ih);
 
-    // Buffer::IObserver implementation:
+    // Terminal::IObserver implementation:
 
     void terminalBegin() throw ();
-    void damageAll() throw ();
+    void terminalDamageAll() throw ();
     void terminalEnd() throw ();
+    void terminalChildExited(int exitStatus) throw ();
 };
 
 #endif // X_WINDOW__HPP

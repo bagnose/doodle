@@ -13,10 +13,11 @@ public:
     class IObserver {
     public:
         virtual void terminalBegin() throw () = 0;
-        //virtual void damage(uint16_t row, uint16_t col) throw () = 0;
-        //virtual void damageRange(uint16_t row, uint16_t col) throw () = 0;
-        virtual void damageAll() throw () = 0;
+        //virtual void terminalDamage(uint16_t row, uint16_t col) throw () = 0;
+        //virtual void terminalDamageRange(uint16_t row, uint16_t col) throw () = 0;
+        virtual void terminalDamageAll() throw () = 0;
         virtual void terminalEnd() throw () = 0;
+        virtual void terminalChildExited(int exitStatus) throw () = 0;
 
     protected:
         IObserver() {}
@@ -25,6 +26,7 @@ public:
 
 private:
     IObserver         & _observer;
+    bool                _dispatch;
     SimpleBuffer        _buffer;
     uint16_t            _cursorRow;
     uint16_t            _cursorCol;
@@ -44,18 +46,18 @@ public:
 
     virtual ~Terminal();
 
-    const SimpleBuffer & buffer() const { return _buffer; }
-    size_t cursorCol() const { return _cursorCol; }
-    size_t cursorRow() const { return _cursorRow; }
+    const SimpleBuffer & buffer()    const { return _buffer;    }
+    uint16_t             cursorRow() const { return _cursorRow; }
+    uint16_t             cursorCol() const { return _cursorCol; }
 
     // TODO buffer access through scroll state.
 
     bool isOpen() const { return _tty.isOpen(); }
     int  getFd() { return _tty.getFd(); }
-    void read() { _tty.read(); }
-    void enqueueWrite(const char * data, size_t size) { _tty.enqueueWrite(data, size); }
-    bool isWritePending() const { return _tty.isWritePending(); }
-    void write() { _tty.write(); }
+    void read() { ASSERT(!_dispatch,); _tty.read(); }
+    void enqueueWrite(const char * data, size_t size) { ASSERT(!_dispatch,); _tty.enqueueWrite(data, size); }
+    bool isWritePending() const { ASSERT(!_dispatch,); return _tty.isWritePending(); }
+    void write() { ASSERT(!_dispatch,); _tty.write(); }
     void resize(uint16_t rows, uint16_t cols);
 
 protected:

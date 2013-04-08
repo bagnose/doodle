@@ -53,6 +53,7 @@ Tty::Tty(IObserver         & observer,
 
 
 Tty::~Tty() {
+    ASSERT(!_dispatch,);
     if (isOpen()) {
         close();
     }
@@ -213,7 +214,7 @@ void Tty::execShell(const std::string & windowId,
             shell = "/bin/sh";
             WARNING("Could not determine shell, falling back to: " << shell);
         }
-        shell = "/bin/sh"; // XXX use sh to avoid colour, etc. (remove this line)
+        //shell = "/bin/sh"; // XXX use sh to avoid colour, etc. (remove this line)
         args.push_back(shell);
         args.push_back("-i");
     }

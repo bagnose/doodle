@@ -9,6 +9,7 @@ Terminal::Terminal(IObserver          & observer,
                    const std::string  & term,
                    const Tty::Command & command) :
     _observer(observer),
+    _dispatch(false),
     _buffer(rows, cols),
     _cursorRow(0),
     _cursorCol(0),
@@ -26,9 +27,12 @@ Terminal::Terminal(IObserver          & observer,
     }
 }
 
-Terminal::~Terminal() {}
+Terminal::~Terminal() {
+    ASSERT(!_dispatch,);
+}
 
 void Terminal::resize(uint16_t rows, uint16_t cols) {
+    ASSERT(!_dispatch,);
     _buffer.resize(rows, cols);
     _tty.resize(rows, cols);
     _tabs.resize(cols);
@@ -40,7 +44,9 @@ void Terminal::resize(uint16_t rows, uint16_t cols) {
 // Tty::IObserver implementation:
 
 void Terminal::ttyBegin() throw () {
+    _dispatch = true;
     _observer.terminalBegin();
+    _dispatch = false;
 }
 
 void Terminal::ttyControl(Control control) throw () {
@@ -73,7 +79,9 @@ void Terminal::ttyControl(Control control) throw () {
             break;
     }
 
-    _observer.damageAll();
+    _dispatch = true;
+    _observer.terminalDamageAll();
+    _dispatch = false;
 }
 
 void Terminal::ttyMoveCursor(uint16_t row, uint16_t col) throw () {
@@ -117,7 +125,9 @@ void Terminal::ttyClearScreen(Tty::ClearScreen clear) throw () {
             break;
     }
 
-    _observer.damageAll();
+    _dispatch = true;
+    _observer.terminalDamageAll();
+    _dispatch = false;
 }
 
 void Terminal::ttySetFg(uint8_t fg) throw () {
@@ -158,13 +168,19 @@ void Terminal::ttyUtf8(const char * s, utf8::Length length) throw () {
         _cursorCol = 0;
     }
 
-    _observer.damageAll();
+    _dispatch = true;
+    _observer.terminalDamageAll();
+    _dispatch = false;
 }
 
 void Terminal::ttyEnd() throw () {
+    _dispatch = true;
     _observer.terminalEnd();
+    _dispatch = false;
 }
 
 void Terminal::ttyChildExited(int exitStatus) throw () {
-    PRINT("Child exited: " << exitStatus);
+    _dispatch = true;
+    _observer.terminalChildExited(exitStatus);
+    _dispatch = false;
 }
